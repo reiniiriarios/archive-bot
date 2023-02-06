@@ -7,6 +7,12 @@ pub type UrlParams<'sq> = Vec<(&'sq str, &'sq str)>;
 pub struct SlackResponse {
   pub channels: Option<Vec<Channel>>,
   pub messages: Option<Vec<Message>>,
+  pub url: Option<String>,
+  pub team: Option<String>,
+  pub user: Option<String>,
+  pub team_id: Option<String>,
+  pub user_id: Option<String>,
+  pub bot_id: Option<String>,
   error: Option<String>,
   #[serde(default)]
   ok: bool,
