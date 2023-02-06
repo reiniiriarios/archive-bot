@@ -1,32 +1,23 @@
-use slack_api;
+use crate::types::{UrlParams, SlackResponse, SlackError};
 
-use crate::config::Config;
-
-pub async fn get_channels(cfg: &Config) -> Option<Vec<slack_api::Channel>> {
-  let client = slack_api::default_client().unwrap();
-  let params = Default::default();
-  let response = slack_api::channels::list(&client, &cfg.slack_api_key, &params).await;
-  match response {
-    Ok(list) => {return list.channels},
-    Err(err) => panic!("Error: {}", err),
-  }
+pub async fn slack_query<'sq>(method: &str, params: &'sq UrlParams<'sq>) -> Result<String, reqwest::Error> {
+  let url = format!("https://slack.com/api/{}", method);
+  let client = reqwest::Client::new();
+  Ok(client.post(url).form(params).send().await?.text().await?)
 }
 
-pub async fn channel_is_old(channel: &slack_api::Channel) -> bool {
-  match &channel.latest {
-    Some(slack_api::Message::Standard(slack_api::MessageStandard {
-        ts: Some(ts),
-        ..
-    })) => {
-      let time: i64 = ts.to_param_value().parse().unwrap();
-      let now = chrono::offset::Utc::now().timestamp();
-      // if the message is older than two weeks
-      if time < (now - (2 * 7 * 24 * 60 * 60)) {
-        return true;
-      }
-    },
-    _ => {}
-  }
+pub async fn send<'sq>(method: &str, params: &'sq UrlParams<'sq>) -> Result<SlackResponse, SlackError<reqwest::Error>> {
+  let response = slack_query(method, params).await;
 
-  false
+  response.map_err(SlackError::Client)
+    .and_then(|result| {
+      serde_json::from_str::<SlackResponse>(&result)
+        .map_err(|e| SlackError::MalformedResponse(result, e))
+    })
+    .and_then(|o| o.into())
+}
+
+pub async fn auth_test(key: &str) {
+  let params: UrlParams = vec![("token", key)];
+  let _ = send("auth.test", &params).await;
 }

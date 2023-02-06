@@ -1,18 +1,19 @@
-use slack_client::channel_is_old;
+use std::env;
 
-mod config;
+mod channels;
 mod slack_client;
+mod types;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-  let cfg: config::Config = config::get_config();
-  let channels = slack_client::get_channels(&cfg).await;
+  let api_key = env::var("SLACK_API_KEY").expect("Error: environment variable SLACK_API_KEY is not set.");
+  let _ = slack_client::auth_test(&api_key);
+  let channels = channels::get_channels(&api_key).await;
   match channels {
     Some(channels) => {
       for channel in channels {
-        if channel_is_old(&channel).await {
-
-        }
+        println!("channel: {:?}", channel.name);
+        println!("{:?}", channel.created);
       }
     },
     None => {},
