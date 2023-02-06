@@ -1,5 +1,5 @@
 use super::slack_client;
-use crate::types::{UrlParams, Channel, Message};
+use crate::types::{UrlParams, Channel, Message, SlackError};
 
 pub async fn get_channels(key: &str) -> Option<Vec<Channel>> {
   let params: UrlParams = vec![
@@ -18,13 +18,29 @@ pub async fn get_channels(key: &str) -> Option<Vec<Channel>> {
   }
 }
 
+pub async fn get_history(key: &str, channel_id: &str, limit: u16) -> Option<Vec<Message>> {
+  let limit: &str = &limit.to_string()[..];
+  let params: UrlParams = vec![
+    ("token", key),
+    ("channel", &channel_id),
+    ("limit", &limit),
+  ];
+
+  let response: Result<crate::types::SlackResponse, crate::types::SlackError<reqwest::Error>> = slack_client::send("conversations.history", &params).await;
+
+  match response {
+    Ok(list) => {return list.messages},
+    Err(err) => match err {
+      SlackError::NotInChannel => { println!("Not in channel: {:}", channel_id); None },
+      _ => panic!("Error: {}", err),
+    }
+  }
+}
+
 #[allow(dead_code)]
-pub async fn channel_is_old(channel: &Channel) -> bool {
-  match &channel.latest {
-    Some(Message {
-        ts: Some(ts),
-        ..
-    }) => {
+pub async fn message_is_old(message: &Message) -> bool {
+  match &message.ts {
+    Some(ts) => {
       let now = chrono::offset::Utc::now().timestamp();
       // if the message is older than two weeks
       if *ts < (now - (2 * 7 * 24 * 60 * 60)) {
