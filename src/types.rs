@@ -4,6 +4,9 @@ use serde::Deserialize;
 pub struct Config {
   pub api_key: String,
   pub filter_prefixes: Vec<&'static str>,
+  pub message_headers: Vec<&'static str>,
+  pub stale_after: u32,
+  pub small_channel_threshold: u16,
 }
 
 pub type UrlParams<'sq> = Vec<(&'sq str, &'sq str)>;
@@ -11,9 +14,10 @@ pub type UrlParams<'sq> = Vec<(&'sq str, &'sq str)>;
 pub struct ChannelData {
   pub name: String,
   pub last_message: i64,
-  pub members_count: i16,
+  pub members_count: i32,
   pub is_old: bool,
   pub is_small: bool,
+  pub is_ignored: bool,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -26,7 +30,7 @@ pub struct SlackResponse {
   pub team_id: Option<String>,
   pub user_id: Option<String>,
   pub bot_id: Option<String>,
-  pub response_metadata: SlackResponseMeta,
+  pub response_metadata: Option<SlackResponseMeta>,
   error: Option<String>,
   #[serde(default)]
   ok: bool,
@@ -34,7 +38,7 @@ pub struct SlackResponse {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct SlackResponseMeta {
-  pub next_cursor: String,
+  pub next_cursor: Option<String>,
 }
 
 impl<E: Error> Into<Result<SlackResponse, SlackError<E>>> for SlackResponse {
