@@ -1,6 +1,8 @@
 use std::env;
 use substring::Substring;
 
+use crate::channels::message_is_old;
+
 mod channels;
 mod slack_client;
 mod types;
@@ -38,9 +40,29 @@ async fn parse_channel(api_key: &str, channel: types::Channel, ignore_prefixes: 
       println!("  TODO join channel");
     }
 
+    let mut old = false;
     if is_member {
       if let Some(history) = channels::get_history(&api_key, &channel_id, 1).await {
-        println!("  message: {:?}", history.first());
+        if let Some(latest_message) = history.first() {
+          if message_is_old(&latest_message) {
+            println!("  message is old");
+            old = true;
+          }
+          else {
+            println!("  message is recent");
+          }
+        }
+      }
+    }
+
+    if !old {
+      if let Some(num_members) = channel.num_members {
+        if num_members < 4 {
+          println!("  only {:} members", num_members);
+        }
+        else {
+          println!("  there are {:} members", num_members);
+        }
       }
     }
   }
