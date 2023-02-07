@@ -13,9 +13,15 @@ pub struct SlackResponse {
   pub team_id: Option<String>,
   pub user_id: Option<String>,
   pub bot_id: Option<String>,
+  pub response_metadata: SlackResponseMeta,
   error: Option<String>,
   #[serde(default)]
   ok: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct SlackResponseMeta {
+  pub next_cursor: String,
 }
 
 impl<E: Error> Into<Result<SlackResponse, SlackError<E>>> for SlackResponse {

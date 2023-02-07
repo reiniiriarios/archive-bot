@@ -1,21 +1,44 @@
 use super::slack_client;
 use crate::types::{UrlParams, Channel, Message, SlackError};
 
-pub async fn get_channels(key: &str) -> Option<Vec<Channel>> {
-  let params: UrlParams = vec![
+pub async fn get_channels(key: &str) -> Vec<Channel> {
+  let mut channels: Vec<Channel> = vec![];
+  let mut cursor: String = "".to_string();
+  loop {
+    let (more_channels, next_cursor) = get_channel_data(&key, &cursor).await;
+    channels.extend(more_channels);
+    cursor = next_cursor;
+    if cursor == "" {
+      break;
+    }
+  }
+  channels
+}
+
+async fn get_channel_data(key: &str, cursor: &str) -> (Vec<Channel>, String) {
+  let mut params: UrlParams = vec![
     ("token", key),
     ("exclude_archived", "1"),
     ("exclude_members", "0"),
-    ("limit", "1000"),
+    ("limit", "100"),
     ("types", "public_channel,private_channel"),
   ];
+  if cursor != "" {
+    params.push(("cursor", cursor));
+  }
 
   let response = slack_client::send("conversations.list", &params).await;
 
   match response {
-    Ok(list) => {return list.channels},
+    Ok(resp) => {
+      if let Some(channels) = resp.channels {
+        return (channels, resp.response_metadata.next_cursor);
+      }
+    },
     Err(err) => panic!("Error: {}", err),
   }
+
+  (vec![], "".to_string())
 }
 
 pub async fn get_history(key: &str, channel_id: &str, limit: u16) -> Option<Vec<Message>> {
