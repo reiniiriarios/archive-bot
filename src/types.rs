@@ -106,7 +106,7 @@ impl<E: Error + 'static> Error for SlackError<E> {
 #[derive(Clone, Debug, Deserialize)]
 pub struct Channel {
   pub accepted_user: Option<String>,
-  pub created: Option<i32>,
+  pub created: Option<Timestamp>,
   pub creator: Option<String>,
   pub id: Option<String>,
   pub is_archived: Option<bool>,
@@ -132,8 +132,64 @@ pub struct Channel {
 #[derive(Clone, Debug, Deserialize)]
 pub struct Message {
   pub text: Option<String>,
-  pub ts: Option<i64>,
+  pub ts: Option<Timestamp>,
   #[serde(rename = "type")]
   pub ty: Option<String>,
   pub user: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct Timestamp(i64);
+
+impl Timestamp {
+  pub fn new(t: i64) -> Timestamp {
+    Timestamp(t)
+  }
+}
+
+impl From<f64> for Timestamp {
+  fn from(t: f64) -> Self {
+    Timestamp(t as i64)
+  }
+}
+
+impl From<i64> for Timestamp {
+  fn from(t: i64) -> Self {
+    Timestamp(t)
+  }
+}
+
+impl From<u64> for Timestamp {
+  fn from(t: u64) -> Self {
+    Timestamp(t as i64)
+  }
+}
+
+impl<'de> ::serde::Deserialize<'de> for Timestamp {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: ::serde::Deserializer<'de> {
+    use serde::de::Error as SerdeError;
+    let value = ::serde_json::Value::deserialize(deserializer)?;
+
+    // Possible formats of timestamp from slack response are u64, f64,
+    // or str as: "", "1234567890", or "1234567890.1234567890".
+    // Unable to directly parse the float strings as i64.
+    if let Some(s) = value.as_str() {
+      if let Some(dot_index) = s.find('.') {
+        if let Ok(i) = s[..dot_index].parse::<i64>() {
+          return Ok(i.into());
+        }
+      } else if let Ok(u) = s.parse::<i64>() {
+        return Ok(u.into());
+      }
+    } else if let Some(f) = value.as_f64() {
+      return Ok(f.into());
+    } else if let Some(u) = value.as_u64() {
+      return Ok((u as f64).into());
+    }
+
+    Err(D::Error::custom(format!(
+      "expected a timestamp but got: {}",
+      value.to_string()
+    )))
+  }
 }

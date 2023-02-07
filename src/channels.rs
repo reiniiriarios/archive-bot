@@ -39,11 +39,11 @@ pub async fn get_history(key: &str, channel_id: &str, limit: u16) -> Option<Vec<
 
 #[allow(dead_code)]
 pub async fn message_is_old(message: &Message) -> bool {
-  match &message.ts {
+  match message.ts {
     Some(ts) => {
       let now = chrono::offset::Utc::now().timestamp();
       // if the message is older than two weeks
-      if *ts < (now - (2 * 7 * 24 * 60 * 60)) {
+      if ts < crate::types::Timestamp::new(now - (2 * 7 * 24 * 60 * 60)) {
         return true;
       }
     },
