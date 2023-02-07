@@ -1,7 +1,20 @@
 use std::{error::Error, fmt};
 use serde::Deserialize;
 
+pub struct Config {
+  pub api_key: String,
+  pub filter_prefixes: Vec<&'static str>,
+}
+
 pub type UrlParams<'sq> = Vec<(&'sq str, &'sq str)>;
+
+pub struct ChannelData {
+  pub name: String,
+  pub last_message: i64,
+  pub members_count: i16,
+  pub is_old: bool,
+  pub is_small: bool,
+}
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct SlackResponse {
@@ -168,6 +181,12 @@ impl From<i64> for Timestamp {
 impl From<u64> for Timestamp {
   fn from(t: u64) -> Self {
     Timestamp(t as i64)
+  }
+}
+
+impl From<Timestamp> for i64 {
+  fn from(t: Timestamp) -> Self {
+    t.0
   }
 }
 
