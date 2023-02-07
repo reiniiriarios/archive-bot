@@ -6,10 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.25.0", features = ["full"] }
-serde = { version = "1.0.152", features = ["derive"] }
-slack_api = "0.23.1"
 chrono = "0.4.23"
-serde_json = "1.0.92"
 reqwest = "0.11.14"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.92"
+slack_api = "0.23.1"
 substring = "1.4.5"
+tokio = { version = "1.25.0", features = ["full"] }
