@@ -1,4 +1,4 @@
-use log::{info, error};
+use log::{info, warn};
 
 use substring::Substring;
 use rand::seq::SliceRandom;
@@ -33,7 +33,7 @@ fn create_message(config: &Config, data: &Vec<types::ChannelData>) -> String {
     if (channel.is_old || channel.is_small) && !channel.is_ignored {
       let line: String = {
         if channel.last_message == 0 {
-          error!("Unable to parse timestamp for channel #{:} ({:})", channel.name, channel.id);
+          warn!("Unable to parse timestamp for channel #{:} ({:})", channel.name, channel.id);
           format!(
             "* <#{id}> has {members} members. I'm having trouble reading the latest message.\n",
             id=channel.id,

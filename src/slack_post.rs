@@ -1,6 +1,6 @@
 use super::slack_client;
 use crate::types::{UrlParams, SlackResponse, SlackError};
-use log::error;
+use log::warn;
 
 pub async fn post_message(token: &str, channel_id: &str, message: &str) -> Result<SlackResponse, SlackError<reqwest::Error>> {
   let params: UrlParams = vec![
@@ -13,7 +13,7 @@ pub async fn post_message(token: &str, channel_id: &str, message: &str) -> Resul
   match slack_client::send("chat.postMessage", &params).await {
     Ok(r) => Ok(r),
     Err(e) => {
-      error!("Unable to post message: {:}", e);
+      warn!("Unable to post message: {:}", e);
       Err(e)
     },
   }
@@ -28,7 +28,7 @@ pub async fn join_channel(token: &str, channel_id: &str) -> Result<SlackResponse
   match slack_client::send("conversations.join", &params).await {
     Ok(r) => Ok(r),
     Err(e) => {
-      error!("Unable to join channel: {:}", e);
+      warn!("Unable to join channel: {:}", e);
       Err(e)
     },
   }
