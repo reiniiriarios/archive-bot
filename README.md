@@ -2,12 +2,12 @@
 
 Slack bot helper for managing outdated and very small channels.
 
-### Configuration
+## Configuration
 
 Archive bot needs a bit of data to get started:
 
 - Slack API Key
-- Notification Channel ID
+- Notification [Channel ID](#finding-slack-channel-id)
 - Filter Prefixes (optional)
 - Messages (optional)
 - Staleness (optional)
@@ -37,10 +37,14 @@ let config = archive_bot::Config {
 };
 ```
 
-### Setting Up Slack
+## Setting Up Slack
 
+## Logging
 
-### Finding Slack Channel ID
+Archive Bot implements the [log](https://docs.rs/log/latest/log/) crate and does not produce output directly.
+See the [examples](#) directory for an implementation of [simplelog](https://github.com/drakulix/simplelog.rs).
+
+## Finding Slack Channel ID
 
 To find the ID of a Slack channel, you can click the channel name for more info and find it at the bottom.
 
