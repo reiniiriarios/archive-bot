@@ -1,0 +1,8 @@
+[package]
+name = "your_package_name"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.25.0", features = ["full"] }
+archive_bot = { git = "https://github.com/reiniiriarios/archive-bot" }

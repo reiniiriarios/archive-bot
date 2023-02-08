@@ -43,7 +43,7 @@ Or, using default values:
 let config = archive_bot::Config {
   token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
   notification_channel_id: "A01A02A03A04",
-  ..Default::default();
+  ..archive_bot::Config::default()
 };
 ```
 
