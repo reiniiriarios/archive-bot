@@ -59,6 +59,7 @@ pub enum SlackError<E: Error> {
   MissingPostType,
   TeamAddedToOrg,
   RequestTimeout,
+  RateLimited,
   MalformedResponse(String, serde_json::error::Error),
   Unknown(String),
   Client(E),
@@ -80,6 +81,7 @@ impl<'a, E: Error> From<&'a str> for SlackError<E> {
       "missing_post_type" => SlackError::MissingPostType,
       "team_added_to_org" => SlackError::TeamAddedToOrg,
       "request_timeout" => SlackError::RequestTimeout,
+      "ratelimited" => SlackError::RateLimited,
       _ => SlackError::Unknown(s.to_owned()),
     }
   }
@@ -101,6 +103,7 @@ impl<E: Error> fmt::Display for SlackError<E> {
       SlackError::MissingPostType => "Missing Content-Type header.",
       SlackError::TeamAddedToOrg => "Team temporarily inaccessible.",
       SlackError::RequestTimeout => "Request timeout.",
+      SlackError::RateLimited => "Rate limited.",
       SlackError::MalformedResponse(_, ref e) => return write!(f, "{}", e),
       SlackError::Unknown(ref s) => return write!(f, "{}", s),
       SlackError::Client(ref inner) => return write!(f, "{}", inner),
