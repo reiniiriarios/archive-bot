@@ -1,4 +1,4 @@
-use log::{info, warn, error};
+use log::{info, error};
 
 use substring::Substring;
 use rand::seq::SliceRandom;
@@ -33,7 +33,7 @@ fn create_message(config: &Config, data: &Vec<types::ChannelData>) -> String {
     if (channel.is_old || channel.is_small) && !channel.is_ignored {
       let line: String = {
         if channel.last_message == 0 {
-          error!("Error: Unable to parse timestamp for channel #{:} ({:})", channel.name, channel.id);
+          error!("Unable to parse timestamp for channel #{:} ({:})", channel.name, channel.id);
           format!(
             "* <#{id}> has {members} members. I'm having trouble reading the latest message.\n",
             id=channel.id,
@@ -80,14 +80,9 @@ async fn parse_channel(config: &Config, channel: types::Channel, ignore_prefixes
 
     // TODO join channel
     if !is_member && false {
-      match slack_post::join_channel(&config.token, &channel_id).await {
-        Ok(_) => {
-          is_member = true;
-          info!("Joined channel #{:} ({:})", channel_name, channel_id);
-        },
-        Err(e) => {
-          warn!("Error: {:}", e);
-        },
+      if let Ok(_) = slack_post::join_channel(&config.token, &channel_id).await {
+        is_member = true;
+        info!("Joined channel #{:} ({:})", channel_name, channel_id);
       }
     }
 

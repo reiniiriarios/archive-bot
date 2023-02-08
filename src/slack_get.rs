@@ -43,7 +43,7 @@ async fn get_channel_data<'sq>(token: &str, cursor: String) -> (Vec<Channel>, St
       }
     },
     Err(err) => {
-      error!("Error: {:}", err);
+      error!("Unable to list channels: {:}", err);
     },
   }
 
@@ -68,7 +68,7 @@ pub async fn get_history(token: &str, channel_id: &str, limit: u16) -> Option<Ve
         None
       },
       _ => {
-        error!("Error: {:}", err);
+        error!("Unable to fetch channel history: {:}", err);
         None
       },
     }
