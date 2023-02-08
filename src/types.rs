@@ -3,6 +3,7 @@ use serde::Deserialize;
 
 pub struct Config {
   pub api_key: String,
+  pub notification_channel_id: &'static str,
   pub filter_prefixes: Vec<&'static str>,
   pub message_headers: Vec<&'static str>,
   pub stale_after: u32,
@@ -12,6 +13,7 @@ pub struct Config {
 pub type UrlParams<'sq> = Vec<(&'sq str, &'sq str)>;
 
 pub struct ChannelData {
+  pub id: String,
   pub name: String,
   pub last_message: i64,
   pub members_count: i32,

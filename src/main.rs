@@ -3,8 +3,9 @@ use substring::Substring;
 use rand::seq::SliceRandom;
 use chrono::NaiveDateTime;
 
-mod channels;
 mod slack_client;
+mod slack_get;
+mod slack_post;
 mod types;
 use types::*;
 
@@ -12,6 +13,7 @@ use types::*;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
   let config = types::Config {
     api_key: env::var("SLACK_API_KEY").expect("Error: environment variable SLACK_API_KEY is not set."),
+    notification_channel_id: "C04N8B12VDK",
     filter_prefixes: vec!["-"],
     message_headers: vec![
       "Hey, you've got some cleaning up to do!",
@@ -27,14 +29,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn run(config: &Config) {
   let mut channels_data: Vec<ChannelData> = vec![];
-  for channel in channels::get_channels(&config.api_key).await {
+  for channel in slack_get::get_channels(&config.api_key).await {
     if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
       channels_data.push(channel_data);
     }
   }
   let message = create_message(&config, &channels_data);
   if message != "" {
-    println!("{}", message);
+    let post = slack_post::post_message(&config.api_key, &config.notification_channel_id, &message).await;
+    if let Err(e) = post {
+      println!("Error: {:}", e);
+    }
   }
 }
 
@@ -45,15 +50,15 @@ fn create_message(config: &Config, data: &Vec<ChannelData>) -> String {
       let line: String = {
         if channel.last_message == 0 {
           format!(
-            "* #{name} has {members} members. I'm having trouble reading the last message.\n",
-            name=channel.name,
+            "* <#{id}> has {members} members. I'm having trouble reading the latest message.\n",
+            id=channel.id,
             members=channel.members_count,
           )
         }
         else {
           format!(
-            "* #{name} has {members} members. The the last message was on {date}.\n",
-            name=channel.name,
+            "* <#{id}> has {members} members. The latest message was on {date}.\n",
+            id=channel.id,
             members=channel.members_count,
             date=format_timestamp(channel.last_message)
           )
@@ -96,7 +101,7 @@ async fn parse_channel(config: &Config, channel: Channel, ignore_prefixes: &Vec<
     let mut last_message_timestamp: i64 = 0;
     let mut old = false;
     if is_member {
-      if let Some(history) = channels::get_history(&config.api_key, &channel_id, 1).await {
+      if let Some(history) = slack_get::get_history(&config.api_key, &channel_id, 1).await {
         if let Some(latest_message) = history.first() {
           (old, last_message_timestamp) = parse_message(&latest_message, config.stale_after).await;
         }
@@ -113,6 +118,7 @@ async fn parse_channel(config: &Config, channel: Channel, ignore_prefixes: &Vec<
     }
 
     return Some(types::ChannelData {
+      id: channel_id,
       name: channel_name,
       last_message: last_message_timestamp,
       members_count: num_members,
