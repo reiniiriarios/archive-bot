@@ -1,9 +1,5 @@
-extern crate simplelog;
-use simplelog::*;
-use std::fs::File;
 use log::{info, warn, error};
 
-use std::env;
 use substring::Substring;
 use rand::seq::SliceRandom;
 use chrono::NaiveDateTime;
@@ -13,33 +9,7 @@ mod slack_get;
 mod slack_post;
 mod types;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-  let config = types::Config {
-    token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
-    notification_channel_id: "C04N8B12VDK",
-    filter_prefixes: vec!["-"],
-    message_headers: vec![
-      "Hey, you've got some cleaning up to do!",
-      "Hey boss, take a look at these, will ya?",
-    ],
-    stale_after: 2 * 7 * 24 * 60 * 60,
-    small_channel_threshold: 3,
-  };
-
-  CombinedLogger::init(
-    vec![
-      TermLogger::new(LevelFilter::Warn, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
-      WriteLogger::new(LevelFilter::Info, Config::default(), File::create("archive_bot.log").unwrap()),
-    ]
-  ).unwrap();
-
-  run(&config).await;
-
-  Ok(())
-}
-
-async fn run(config: &types::Config) {
+pub async fn run(config: &types::Config) {
   let mut channels_data: Vec<types::ChannelData> = vec![];
   for channel in slack_get::get_channels(&config.token).await {
     if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
@@ -53,7 +23,6 @@ async fn run(config: &types::Config) {
       info!("Posted update in {:}", config.notification_channel_id);
     }
   }
-  
 }
 
 fn create_message(config: &types::Config, data: &Vec<types::ChannelData>) -> String {
