@@ -11,7 +11,7 @@ mod types;
 mod config;
 pub use self::config::Config;
 
-pub async fn run(config: &Config) {
+pub async fn run(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
   let mut channels_data: Vec<types::ChannelData> = vec![];
   for channel in slack_get::get_channels(&config.token).await {
     if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
@@ -25,6 +25,8 @@ pub async fn run(config: &Config) {
       info!("Posted update in {:}", config.notification_channel_id);
     }
   }
+
+  Ok(())
 }
 
 fn create_message(config: &Config, data: &Vec<types::ChannelData>) -> String {
