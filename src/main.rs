@@ -85,7 +85,7 @@ async fn parse_channel(config: &Config, channel: Channel, ignore_prefixes: &Vec<
   if let (
     Some(channel_id),
     Some(channel_name),
-    Some(is_member),
+    Some(mut is_member),
   ) = (
     channel.id,
     channel.name,
@@ -94,8 +94,13 @@ async fn parse_channel(config: &Config, channel: Channel, ignore_prefixes: &Vec<
     let ignored = ignore_prefixes.contains(&channel_name.substring(0, 1));
 
     // TODO join channel
-    if !is_member {
-      join_channel(&channel_id).await;
+    if !is_member && false {
+      match slack_post::join_channel(&config.token, &channel_id).await {
+        Ok(_) => { is_member = true },
+        Err(e) => {
+          println!("Error: {:}", e);
+        },
+      }
     }
 
     let mut last_message_timestamp: i64 = 0;
@@ -145,9 +150,4 @@ async fn parse_message(message: &types::Message, stale_after: u32) -> (bool, i64
   }
 
   (old, t)
-}
-
-#[allow(unused_variables)]
-async fn join_channel(channel_id: &str) {
-  // TODO join channel
 }
