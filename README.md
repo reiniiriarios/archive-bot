@@ -60,4 +60,4 @@ See the [examples](#) directory for an implementation of [simplelog](https://git
 
 To find the ID of a Slack channel, you can click the channel name for more info and find it at the bottom.
 
-<img src="docs/find-channel-id.png" alt="Screenshot of Slack channel info with an arrow pointing to the Channel ID at the bottom of the window." style="max-width: 500px;">
+<img src="docs/find-channel-id.png" alt="Screenshot of Slack channel info with an arrow pointing to the Channel ID at the bottom of the window." width="500">
