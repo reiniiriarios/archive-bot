@@ -1,9 +1,10 @@
 [package]
 name = "archive-bot"
 version = "0.1.0"
+authors = ["Emma Litwa-Vulcu <80431903+reiniiriarios@users.noreply.github.com>"]
+repository = "https://github.com/reiniiriarios/archive-bot"
+description = "Slack bot helper for managing outdated channels."
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 chrono = "0.4.23"
