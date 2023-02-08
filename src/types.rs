@@ -1,4 +1,4 @@
-use std::{error::Error, fmt};
+use std::{error::Error, default::Default, fmt};
 use serde::Deserialize;
 
 pub struct Config {
@@ -8,6 +8,22 @@ pub struct Config {
   pub message_headers: Vec<&'static str>,
   pub stale_after: u32,
   pub small_channel_threshold: u16,
+}
+
+impl Default for Config {
+  fn default() -> Config {
+    Config {
+      token: "".to_string(),
+      notification_channel_id: "",
+      filter_prefixes: vec![],
+      message_headers: vec![
+        "Hey, you've got some cleaning up to do!",
+        "Hey boss, take a look at these, will ya?",
+      ],
+      stale_after: 2 * 7 * 24 * 60 * 60,
+      small_channel_threshold: 3,
+    }
+  }
 }
 
 pub type UrlParams<'sq> = Vec<(&'sq str, &'sq str)>;
