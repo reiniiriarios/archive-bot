@@ -2,7 +2,7 @@ use std::{error::Error, fmt};
 use serde::Deserialize;
 
 pub struct Config {
-  pub api_key: String,
+  pub token: String,
   pub notification_channel_id: &'static str,
   pub filter_prefixes: Vec<&'static str>,
   pub message_headers: Vec<&'static str>,

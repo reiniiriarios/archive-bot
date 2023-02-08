@@ -24,8 +24,8 @@ mod tests {
 
   #[tokio::test]
   async fn test_auth() {
-    let api_key = env::var("SLACK_API_KEY").expect("Error: environment variable SLACK_API_KEY is not set.");
-    let params: UrlParams = vec![("token", &api_key)];
+    let token = env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set.");
+    let params: UrlParams = vec![("token", &token)];
     if let Ok(auth) = send("auth.test", &params).await {
       if let Some(user) = auth.user {
         assert!(user != "");

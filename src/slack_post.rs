@@ -1,9 +1,9 @@
 use super::slack_client;
 use crate::types::{UrlParams, SlackResponse, SlackError};
 
-pub async fn post_message(api_key: &str, channel_id: &str, message: &str) -> Result<SlackResponse, SlackError<reqwest::Error>> {
+pub async fn post_message(token: &str, channel_id: &str, message: &str) -> Result<SlackResponse, SlackError<reqwest::Error>> {
   let params: UrlParams = vec![
-    ("token", api_key),
+    ("token", token),
     ("channel", channel_id),
     ("text", message),
     ("mrkdwn", "1"),

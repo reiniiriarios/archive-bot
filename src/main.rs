@@ -12,7 +12,7 @@ use types::*;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
   let config = types::Config {
-    api_key: env::var("SLACK_API_KEY").expect("Error: environment variable SLACK_API_KEY is not set."),
+    token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
     notification_channel_id: "C04N8B12VDK",
     filter_prefixes: vec!["-"],
     message_headers: vec![
@@ -29,14 +29,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn run(config: &Config) {
   let mut channels_data: Vec<ChannelData> = vec![];
-  for channel in slack_get::get_channels(&config.api_key).await {
+  for channel in slack_get::get_channels(&config.token).await {
     if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
       channels_data.push(channel_data);
     }
   }
   let message = create_message(&config, &channels_data);
   if message != "" {
-    let post = slack_post::post_message(&config.api_key, &config.notification_channel_id, &message).await;
+    let post = slack_post::post_message(&config.token, &config.notification_channel_id, &message).await;
     if let Err(e) = post {
       println!("Error: {:}", e);
     }
@@ -101,7 +101,7 @@ async fn parse_channel(config: &Config, channel: Channel, ignore_prefixes: &Vec<
     let mut last_message_timestamp: i64 = 0;
     let mut old = false;
     if is_member {
-      if let Some(history) = slack_get::get_history(&config.api_key, &channel_id, 1).await {
+      if let Some(history) = slack_get::get_history(&config.token, &channel_id, 1).await {
         if let Some(latest_message) = history.first() {
           (old, last_message_timestamp) = parse_message(&latest_message, config.stale_after).await;
         }
