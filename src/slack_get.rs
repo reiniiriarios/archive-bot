@@ -1,5 +1,6 @@
 use super::slack_client;
 use crate::types::{UrlParams, Channel, Message, SlackResponse, SlackError};
+use log::{warn, error};
 
 pub async fn get_channels<'sq>(token: &str) -> Vec<Channel> {
   let mut channels: Vec<Channel> = vec![];
@@ -41,7 +42,9 @@ async fn get_channel_data<'sq>(token: &str, cursor: String) -> (Vec<Channel>, St
         return (channels, cursor);
       }
     },
-    Err(err) => panic!("Error: {}", err),
+    Err(err) => {
+      error!("Error: {:}", err);
+    },
   }
 
   (vec![], "".to_string())
@@ -60,8 +63,14 @@ pub async fn get_history(token: &str, channel_id: &str, limit: u16) -> Option<Ve
   match response {
     Ok(list) => {return list.messages},
     Err(err) => match err {
-      SlackError::NotInChannel => { println!("Not in channel: {:}", channel_id); None },
-      _ => panic!("Error: {}", err),
+      SlackError::NotInChannel => {
+        warn!("Not in channel {:}", channel_id);
+        None
+      },
+      _ => {
+        error!("Error: {:}", err);
+        None
+      },
     }
   }
 }
