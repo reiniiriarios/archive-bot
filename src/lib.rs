@@ -8,8 +8,10 @@ mod slack_client;
 mod slack_get;
 mod slack_post;
 mod types;
+mod config;
+pub use self::config::Config;
 
-pub async fn run(config: &types::Config) {
+pub async fn run(config: &Config) {
   let mut channels_data: Vec<types::ChannelData> = vec![];
   for channel in slack_get::get_channels(&config.token).await {
     if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
@@ -25,7 +27,7 @@ pub async fn run(config: &types::Config) {
   }
 }
 
-fn create_message(config: &types::Config, data: &Vec<types::ChannelData>) -> String {
+fn create_message(config: &Config, data: &Vec<types::ChannelData>) -> String {
   let mut message: String = "".to_string();
   for channel in data {
     if (channel.is_old || channel.is_small) && !channel.is_ignored {
@@ -64,7 +66,7 @@ fn format_timestamp(t: i64) -> String {
   NaiveDateTime::from_timestamp_opt(t, 0).unwrap().format("%b %d, %Y").to_string()
 }
 
-async fn parse_channel(config: &types::Config, channel: types::Channel, ignore_prefixes: &Vec<&str>) -> Option<types::ChannelData> {
+async fn parse_channel(config: &Config, channel: types::Channel, ignore_prefixes: &Vec<&str>) -> Option<types::ChannelData> {
   if let (
     Some(channel_id),
     Some(channel_name),
