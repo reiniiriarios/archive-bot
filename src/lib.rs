@@ -146,7 +146,7 @@ mod tests {
   async fn test_run() {
     let config = Config {
       token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
-      notification_channel_id: "C04N8B12VDK",
+      notification_channel_id: env::var("SLACK_CHANNEL_ID").expect("Error: environment variable SLACK_CHANNEL_ID is not set."),
       ..Config::default()
     };
 
