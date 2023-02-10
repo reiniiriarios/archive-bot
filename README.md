@@ -49,11 +49,11 @@ let config = archive_bot::Config {
 
 ## Setting Up Slack
 
--- TODO --
+See Slack documentation for [basic app setup](https://api.slack.com/authentication/basics).
 
 Generate your Bot User OAuth Token on the [Slack API Admin](https://api.slack.com/apps) > \[Your App\] > Features > OAuth & Permissions.
 
-Your Slack Bot needs the following scopes:
+Your app needs the following scopes:
 
 - `channels:history`
 - `channels:join`
