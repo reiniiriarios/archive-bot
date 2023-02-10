@@ -147,13 +147,6 @@ mod tests {
     let config = Config {
       token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
       notification_channel_id: "C04N8B12VDK",
-      filter_prefixes: vec!["-"],
-      message_headers: vec![
-        "Hey, you've got some cleaning up to do!",
-        "Hey boss, take a look at these, will ya?",
-      ],
-      stale_after: 2 * 7 * 24 * 60 * 60,
-      small_channel_threshold: 3,
       ..Config::default()
     };
 
