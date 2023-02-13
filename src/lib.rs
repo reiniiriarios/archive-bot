@@ -139,17 +139,11 @@ async fn parse_message(message: &types::Message, stale_after: u32) -> (bool, i64
 
 #[cfg(test)]
 mod tests {
-  use std::env;
   use super::*;
 
   #[tokio::test]
   async fn test_create_message() {
-    let channel = env::var("SLACK_CHANNEL_ID").expect("Error: environment variable SLACK_CHANNEL_ID is not set.");
-    let config = Config {
-      token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
-      notification_channel_id: &channel,
-      ..Config::default()
-    };
+    let config = Config::from_env();
 
     let mut channels_data: Vec<types::ChannelData> = vec![];
     for channel in slack_get::get_channels(&config.token).await {
@@ -158,6 +152,6 @@ mod tests {
       }
     }
     let message = create_message(&config, &channels_data);
-    log::debug!("Message:\n{:}", message);
+    println!("Message:\n{:}", message);
   }
 }

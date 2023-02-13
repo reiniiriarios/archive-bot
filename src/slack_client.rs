@@ -19,13 +19,13 @@ pub async fn send<'sq>(method: &str, params: &'sq UrlParams<'sq>) -> Result<Slac
 
 #[cfg(test)]
 mod tests {
-  use std::env;
+  use crate::Config;
   use super::*;
 
   #[tokio::test]
   async fn test_auth() {
-    let token = env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set.");
-    let params: UrlParams = vec![("token", &token)];
+    let config = Config::from_env();
+    let params: UrlParams = vec![("token", &config.token)];
     if let Ok(auth) = send("auth.test", &params).await {
       if let Some(user) = auth.user {
         assert!(user != "");

@@ -5,7 +5,7 @@ use archive_bot;
 async fn main() {
   let config = archive_bot::Config {
     token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
-    notification_channel_id: "A01A02A03A04",
+    notification_channel_id: "A01A02A03A04".to_string(),
     filter_prefixes: vec!["-"],
     message_headers: vec![
       "Hey, you've got some cleaning up to do!",
