@@ -2,7 +2,6 @@ use log::{info, warn};
 
 use substring::Substring;
 use rand::seq::SliceRandom;
-use chrono::NaiveDateTime;
 
 mod slack_client;
 mod slack_get;
@@ -48,7 +47,7 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<types::ChannelData>) -
             "* <#{id}> has {members} members. The latest message was on {date}.\n",
             id=channel.id,
             members=channel.members_count,
-            date=format_timestamp(channel.last_message)
+            date=channel.last_message_formatted()
           )
         }
       };
@@ -62,11 +61,6 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<types::ChannelData>) -
   }
 
   message
-}
-
-fn format_timestamp(t: i64) -> String {
-  if t == 0 { return "[unable to parse timestamp]".to_string() }
-  NaiveDateTime::from_timestamp_opt(t, 0).unwrap().format("%b %d, %Y").to_string()
 }
 
 async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: types::Channel, ignore_prefixes: &Vec<&str>) -> Option<types::ChannelData> {
