@@ -1,12 +1,19 @@
 use std::env;
 
 /// Config for Archive Bot.
+#[derive(Debug)]
 pub struct Config<'cfg> {
+  /// Slack bot token.
   pub token: String,
+  /// Channel id to send notifications.
   pub notification_channel_id: String,
+  /// Vector of channel prefixes to filter out of results.
   pub filter_prefixes: Vec<&'cfg str>,
+  /// Vector of messages to send (one at random) at beginning of updates.
   pub message_headers: Vec<&'cfg str>,
+  /// How long until a channel is stale (in seconds).
   pub stale_after: u32,
+  /// The threshold <= channels are considered "small".
   pub small_channel_threshold: u16,
 }
 

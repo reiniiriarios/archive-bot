@@ -1,3 +1,12 @@
+#![deny(missing_docs,
+  missing_debug_implementations, missing_copy_implementations,
+  trivial_casts, trivial_numeric_casts,
+  unsafe_code,
+  unstable_features,
+  unused_import_braces, unused_qualifications)]
+
+//! Archive Bot.
+
 use log::{info, warn};
 
 use substring::Substring;
@@ -14,6 +23,7 @@ use types::*;
 mod config;
 pub use self::config::Config;
 
+/// Run Archive Bot.
 pub async fn run<'cfg>(config: &Config<'cfg>) -> Result<(), Box<dyn std::error::Error>> {
   let mut channels_data: Vec<ChannelData> = vec![];
   for channel in slack_get::get_channels(&config.token).await {
