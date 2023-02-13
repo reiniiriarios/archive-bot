@@ -7,12 +7,15 @@ mod slack_client;
 mod slack_get;
 mod slack_post;
 mod slack_error;
+mod slack_response;
+use slack_response::*;
 mod types;
+use types::*;
 mod config;
 pub use self::config::Config;
 
 pub async fn run<'cfg>(config: &Config<'cfg>) -> Result<(), Box<dyn std::error::Error>> {
-  let mut channels_data: Vec<types::ChannelData> = vec![];
+  let mut channels_data: Vec<ChannelData> = vec![];
   for channel in slack_get::get_channels(&config.token).await {
     if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
       channels_data.push(channel_data);
@@ -29,7 +32,7 @@ pub async fn run<'cfg>(config: &Config<'cfg>) -> Result<(), Box<dyn std::error::
   Ok(())
 }
 
-fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<types::ChannelData>) -> String {
+fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> String {
   let mut message: String = "".to_string();
   for channel in data {
     if (channel.is_old || channel.is_small) && !channel.is_ignored {
@@ -63,7 +66,7 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<types::ChannelData>) -
   message
 }
 
-async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: types::Channel, ignore_prefixes: &Vec<&str>) -> Option<types::ChannelData> {
+async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_prefixes: &Vec<&str>) -> Option<ChannelData> {
   if let (
     Some(channel_id),
     Some(channel_name),
@@ -102,7 +105,7 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: types::Channel, ign
       }
     }
 
-    return Some(types::ChannelData {
+    return Some(ChannelData {
       id: channel_id,
       name: channel_name,
       last_message: last_message_timestamp,
@@ -116,7 +119,7 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: types::Channel, ign
   None
 }
 
-async fn parse_message(message: &types::Message, stale_after: u32) -> (bool, i64) {
+async fn parse_message(message: &Message, stale_after: u32) -> (bool, i64) {
   let mut t: i64 = 0;
   if let Some(ts) = message.ts {
     t = ts.into();
@@ -124,7 +127,7 @@ async fn parse_message(message: &types::Message, stale_after: u32) -> (bool, i64
   let mut old = false;
   if let Some(ts) = message.ts {
     let now = chrono::offset::Utc::now().timestamp();
-    if ts < crate::types::Timestamp::new(now - stale_after as i64) {
+    if ts < Timestamp::new(now - stale_after as i64) {
       old = true;
     }
   }
@@ -140,7 +143,7 @@ mod tests {
   async fn test_create_message() {
     let config = Config::from_env();
 
-    let mut channels_data: Vec<types::ChannelData> = vec![];
+    let mut channels_data: Vec<ChannelData> = vec![];
     for channel in slack_get::get_channels(&config.token).await {
       if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
         channels_data.push(channel_data);

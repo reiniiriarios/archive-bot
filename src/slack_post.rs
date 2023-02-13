@@ -1,6 +1,7 @@
 use super::slack_client;
-use crate::types::{UrlParams, SlackResponse};
+use crate::types::UrlParams;
 use crate::slack_error::SlackError;
+use crate::slack_response::SlackResponse;
 use log::warn;
 
 pub async fn post_message(token: &str, channel_id: &str, message: &str) -> Result<SlackResponse, SlackError<reqwest::Error>> {

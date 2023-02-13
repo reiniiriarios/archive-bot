@@ -1,5 +1,6 @@
-use crate::types::{UrlParams, SlackResponse};
+use crate::types::UrlParams;
 use crate::slack_error::SlackError;
+use crate::slack_response::SlackResponse;
 
 pub async fn slack_query<'sq>(method: &str, params: &'sq UrlParams<'sq>) -> Result<String, reqwest::Error> {
   let url = format!("https://slack.com/api/{}", method);

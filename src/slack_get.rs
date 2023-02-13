@@ -1,6 +1,7 @@
 use super::slack_client;
-use crate::types::{UrlParams, Channel, Message, SlackResponse};
+use crate::types::UrlParams;
 use crate::slack_error::SlackError;
+use crate::slack_response::{SlackResponse, Channel, Message};
 use log::warn;
 
 pub async fn get_channels<'sq>(token: &str) -> Vec<Channel> {
