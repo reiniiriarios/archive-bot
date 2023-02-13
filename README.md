@@ -2,16 +2,6 @@
 
 Slack bot helper for managing outdated and very small channels.
 
-## Using
-
-This bot is not currently on the Rust registry. To add to a project, add the following to your `[dependencies]` in `Cargo.toml`.
-
-```toml
-archive_bot = { git = "https://github.com/reiniiriarios/archive-bot" }
-```
-
-See the [examples](examples/) directory for implementation details.
-
 ## Configuration
 
 Archive bot needs a bit of data to get started:
@@ -46,6 +36,20 @@ let config = archive_bot::Config {
   ..archive_bot::Config::default()
 };
 ```
+
+## Implementation
+
+Currently this bot consists of a single runtime, with a single action. Further actions and
+config options TBD.
+
+```rust
+match archive_bot::run(&config).await {
+  Ok(_) => println!("Success!"),
+  Err(e) => panic!("Uhoh! {:}", e),
+}
+```
+
+See the [examples](examples/) directory for further implementation details.
 
 ## Setting Up Slack
 
