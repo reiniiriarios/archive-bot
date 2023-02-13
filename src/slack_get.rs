@@ -22,7 +22,7 @@ async fn get_channel_data<'sq>(token: &str, cursor: String) -> (Vec<Channel>, St
     ("token", token),
     ("exclude_archived", "1"),
     ("exclude_members", "0"),
-    ("limit", "100"),
+    ("limit", "1000"),
     ("types", "public_channel,private_channel"),
   ];
   if cursor != "" {
