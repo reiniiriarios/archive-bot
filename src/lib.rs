@@ -7,6 +7,7 @@ use chrono::NaiveDateTime;
 mod slack_client;
 mod slack_get;
 mod slack_post;
+mod slack_error;
 mod types;
 mod config;
 pub use self::config::Config;
