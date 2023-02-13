@@ -32,3 +32,9 @@ cargo test
 ```
 
 See [cargo-test](https://doc.rust-lang.org/cargo/commands/cargo-test.html).
+
+To test notification output w/o posting to Slack:
+
+```
+cargo test create_message -- --nocapture
+```
