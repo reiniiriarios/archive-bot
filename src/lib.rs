@@ -143,15 +143,21 @@ mod tests {
   use super::*;
 
   #[tokio::test]
-  async fn test_run() {
+  async fn test_create_message() {
+    let channel = env::var("SLACK_CHANNEL_ID").expect("Error: environment variable SLACK_CHANNEL_ID is not set.");
     let config = Config {
       token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
-      notification_channel_id: env::var("SLACK_CHANNEL_ID").expect("Error: environment variable SLACK_CHANNEL_ID is not set."),
+      notification_channel_id: &channel,
       ..Config::default()
     };
 
-    if let Err(_) = run(&config).await {
-      assert!(false);
+    let mut channels_data: Vec<types::ChannelData> = vec![];
+    for channel in slack_get::get_channels(&config.token).await {
+      if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
+        channels_data.push(channel_data);
+      }
     }
+    let message = create_message(&config, &channels_data);
+    log::debug!("Message:\n{:}", message);
   }
 }
