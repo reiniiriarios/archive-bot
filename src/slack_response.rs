@@ -2,6 +2,7 @@ use std::{error::Error, default::Default};
 use serde::Deserialize;
 use crate::slack_error::SlackError;
 
+/// Possible json response from Slack API.
 #[derive(Clone, Debug, Deserialize)]
 pub struct SlackResponse {
   pub channels: Option<Vec<Channel>>,
@@ -18,12 +19,14 @@ pub struct SlackResponse {
   ok: bool,
 }
 
+/// Metadata including next cursor (pagination marker).
 #[derive(Clone, Debug, Deserialize)]
 pub struct SlackResponseMeta {
   pub next_cursor: Option<String>,
 }
 
 impl<E: Error> Into<Result<SlackResponse, SlackError<E>>> for SlackResponse {
+  /// Parse response.
   fn into(self) -> Result<SlackResponse, SlackError<E>> {
     if self.ok {
       Ok(self)
@@ -33,41 +36,53 @@ impl<E: Error> Into<Result<SlackResponse, SlackError<E>>> for SlackResponse {
   }
 }
 
+/// Conversation response. Non-comprehensive.
+/// https://api.slack.com/types/conversation
 #[derive(Clone, Debug, Deserialize)]
 pub struct Channel {
-  pub accepted_user: Option<String>,
+  pub id: Option<String>,
+  pub name: Option<String>,
+  pub is_channel: Option<bool>,
+  pub is_group: Option<bool>,
+  pub is_im: Option<bool>,
   pub created: Option<Timestamp>,
   pub creator: Option<String>,
-  pub id: Option<String>,
   pub is_archived: Option<bool>,
-  pub is_channel: Option<bool>,
   pub is_general: Option<bool>,
-  pub is_member: Option<bool>,
-  pub is_moved: Option<i32>,
-  pub is_mpim: Option<bool>,
-  pub is_org_shared: Option<bool>,
-  pub is_pending_ext_shared: Option<bool>,
-  pub is_private: Option<bool>,
+  pub unlinked: Option<bool>,
+  pub name_normalized: Option<String>,
   pub is_read_only: Option<bool>,
   pub is_shared: Option<bool>,
+  pub is_ext_shared: Option<bool>,
+  pub is_org_shared: Option<bool>,
+  pub pending_shared: Option<Vec<String>>,
+  pub is_pending_ext_shared: Option<bool>,
+  pub is_member: Option<bool>,
+  pub is_private: Option<bool>,
+  pub is_mpim: Option<bool>,
   pub last_read: Option<String>,
-  pub messages: Option<Vec<Message>>,
-  pub members: Option<Vec<String>>,
-  pub name: Option<String>,
-  pub name_normalized: Option<String>,
-  pub num_members: Option<i32>,
+  // topic
+  // purpose
   pub previous_names: Option<Vec<String>>,
+  pub num_members: Option<i32>,
 }
 
+/// Message data response. Non-comprehensive.
+/// https://api.slack.com/events/message
 #[derive(Clone, Debug, Deserialize)]
 pub struct Message {
+  #[serde(rename = "type")]
+  pub event_type: Option<String>,
+  pub subtype: Option<String>,
+  pub channel: Option<String>,
+  pub user: Option<String>,
   pub text: Option<String>,
   pub ts: Option<Timestamp>,
-  #[serde(rename = "type")]
-  pub ty: Option<String>,
-  pub user: Option<String>,
+  // edited
 }
 
+/// Timestamp type for Slack responses.
+/// Slack returns a f64 in a string that cannot be directly parsed.
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Timestamp(i64);
 
