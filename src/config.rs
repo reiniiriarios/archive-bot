@@ -1,14 +1,14 @@
-pub struct Config {
+pub struct Config<'cfg> {
   pub token: String,
-  pub notification_channel_id: &'static str,
-  pub filter_prefixes: Vec<&'static str>,
-  pub message_headers: Vec<&'static str>,
+  pub notification_channel_id: &'cfg str,
+  pub filter_prefixes: Vec<&'cfg str>,
+  pub message_headers: Vec<&'cfg str>,
   pub stale_after: u32,
   pub small_channel_threshold: u16,
 }
 
-impl Default for Config {
-  fn default() -> Config {
+impl<'cfg> Default for Config<'cfg> {
+  fn default() -> Config<'cfg> {
     Config {
       token: "".to_string(),
       notification_channel_id: "",
