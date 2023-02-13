@@ -1,5 +1,6 @@
 use std::env;
 
+/// Config for Archive Bot.
 pub struct Config<'cfg> {
   pub token: String,
   pub notification_channel_id: String,
@@ -10,6 +11,7 @@ pub struct Config<'cfg> {
 }
 
 impl<'cfg> Default for Config<'cfg> {
+  /// To append to configuration to fill blank values with defaults.
   fn default() -> Config<'cfg> {
     Config {
       token: "".to_string(),
@@ -26,6 +28,7 @@ impl<'cfg> Default for Config<'cfg> {
 }
 
 impl<'cfg> Config<'cfg> {
+  /// Create a configuration from environment variables.
   pub fn from_env() -> Config<'cfg> {
     Config {
       token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),

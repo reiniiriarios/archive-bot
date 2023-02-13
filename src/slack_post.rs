@@ -4,6 +4,7 @@ use crate::slack_error::SlackError;
 use crate::slack_response::SlackResponse;
 use log::warn;
 
+/// Post a message to a channel.
 pub async fn post_message(token: &str, channel_id: &str, message: &str) -> Result<SlackResponse, SlackError<reqwest::Error>> {
   let params: UrlParams = vec![
     ("token", token),
@@ -21,6 +22,7 @@ pub async fn post_message(token: &str, channel_id: &str, message: &str) -> Resul
   }
 }
 
+/// Make Archive Bot join a channel.
 pub async fn join_channel(token: &str, channel_id: &str) -> Result<SlackResponse, SlackError<reqwest::Error>> {
   let params: UrlParams = vec![
     ("token", token),

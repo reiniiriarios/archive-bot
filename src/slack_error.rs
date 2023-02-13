@@ -1,5 +1,7 @@
 use std::{error::Error, fmt};
 
+/// Non-comprehensive list of common or vague error messages.
+/// Undefined error types will display their raw value, e.g. `invalid_param_format`.
 #[derive(Debug)]
 pub enum SlackError<E: Error> {
   InvalidAuth,

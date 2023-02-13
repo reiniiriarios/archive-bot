@@ -2,12 +2,14 @@ use crate::types::UrlParams;
 use crate::slack_error::SlackError;
 use crate::slack_response::SlackResponse;
 
+/// Wrapper for reqwest client to make Slack API calls.
 pub async fn slack_query<'sq>(method: &str, params: &'sq UrlParams<'sq>) -> Result<String, reqwest::Error> {
   let url = format!("https://slack.com/api/{}", method);
   let client = reqwest::Client::new();
   Ok(client.post(url).form(params).send().await?.text().await?)
 }
 
+/// Send specific API call and parse response.
 pub async fn send<'sq>(method: &str, params: &'sq UrlParams<'sq>) -> Result<SlackResponse, SlackError<reqwest::Error>> {
   let response = slack_query(method, params).await;
 

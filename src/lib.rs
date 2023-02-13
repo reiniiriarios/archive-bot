@@ -32,6 +32,7 @@ pub async fn run<'cfg>(config: &Config<'cfg>) -> Result<(), Box<dyn std::error::
   Ok(())
 }
 
+/// Parse data to create regular update message to post regarding channel status.
 fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> String {
   let mut message: String = "".to_string();
   for channel in data {
@@ -66,6 +67,7 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
   message
 }
 
+/// Parse a specific channel for relevant data, fetching missing data where necessary.
 async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_prefixes: &Vec<&str>) -> Option<ChannelData> {
   if let (
     Some(channel_id),
@@ -119,6 +121,7 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_pre
   None
 }
 
+/// Parse a message to get `is_old` status and timestamp of message.
 async fn parse_message(message: &Message, stale_after: u32) -> (bool, i64) {
   let mut t: i64 = 0;
   if let Some(ts) = message.ts {

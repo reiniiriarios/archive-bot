@@ -1,7 +1,10 @@
 use chrono::NaiveDateTime;
 
+/// URL Parameters used to make requests.
+/// In the format: ("Header-Name", "Value").
 pub type UrlParams<'sq> = Vec<(&'sq str, &'sq str)>;
 
+/// Parsed channel data.
 pub struct ChannelData {
   pub id: String,
   pub name: String,
@@ -13,6 +16,7 @@ pub struct ChannelData {
 }
 
 impl ChannelData {
+  /// Format timestamp to human date.
   pub fn last_message_formatted(&self) -> String {
     let t: i64 = self.last_message;
     if t == 0 { return "[unable to parse timestamp]".to_string() }

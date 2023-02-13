@@ -4,6 +4,7 @@ use crate::slack_error::SlackError;
 use crate::slack_response::{SlackResponse, Channel, Message};
 use log::warn;
 
+/// Get a comprehensive list of basic channel data.
 pub async fn get_channels<'sq>(token: &str) -> Vec<Channel> {
   let mut channels: Vec<Channel> = vec![];
   let mut cursor: String = "".to_string();
@@ -18,6 +19,7 @@ pub async fn get_channels<'sq>(token: &str) -> Vec<Channel> {
   channels
 }
 
+/// Get channel data for given cursor (pagination).
 async fn get_channel_data<'sq>(token: &str, cursor: String) -> (Vec<Channel>, String) {
   let mut params: UrlParams = vec![
     ("token", token),
@@ -52,6 +54,7 @@ async fn get_channel_data<'sq>(token: &str, cursor: String) -> (Vec<Channel>, St
   (vec![], "".to_string())
 }
 
+/// Get conversation history for.
 pub async fn get_history(token: &str, channel_id: &str, limit: u16) -> Option<Vec<Message>> {
   let limit: &str = &limit.to_string()[..];
   let params: UrlParams = vec![
