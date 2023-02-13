@@ -4,8 +4,10 @@ version = "0.1.0"
 authors = ["Emma Litwa-Vulcu <80431903+reiniiriarios@users.noreply.github.com>"]
 repository = "https://github.com/reiniiriarios/archive-bot"
 description = "Slack bot helper for managing outdated channels."
+keywords = ["slack", "slackbot", "slack-bot"]
 license = "GPL-3.0+"
 edition = "2021"
+exclude = ["/examples", "/.github"]
 
 [dependencies]
 chrono = "0.4.23"
