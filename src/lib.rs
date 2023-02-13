@@ -144,6 +144,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_create_message() {
+    simplelog::TermLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default(), simplelog::TerminalMode::Mixed, simplelog::ColorChoice::Auto).unwrap();
     let config = Config::from_env();
 
     let mut channels_data: Vec<ChannelData> = vec![];
