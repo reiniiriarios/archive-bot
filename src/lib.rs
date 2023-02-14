@@ -90,10 +90,13 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_pre
     let ignored = channel_is_ignored(&channel_name, ignore_prefixes);
 
     // TODO join channel
-    if !is_member && false {
-      if let Ok(_) = slack_post::join_channel(&config.token, &channel_id).await {
-        is_member = true;
-        info!("Joined channel #{:} ({:})", channel_name, channel_id);
+    if !is_member && !ignored {
+      log::debug!("Need to join channel #{:} ({:})", channel_name, channel_id);
+      if false { // REMOVE ME
+        if let Ok(_) = slack_post::join_channel(&config.token, &channel_id).await {
+          is_member = true;
+          info!("Joined channel #{:} ({:})", channel_name, channel_id);
+        }
       }
     }
 
@@ -160,14 +163,14 @@ fn channel_is_ignored(channel_name: &str, ignore_prefixes: &Vec<&str>) -> bool {
 
 #[cfg(test)]
 mod tests {
-  #[cfg(feature = "unit_output")]
+  #[cfg(any(feature = "unit", feature="unit_output"))]
   use super::*;
 
   /// Create a test message and print it to stdout rather than posting to Slack.
   #[tokio::test]
   #[cfg(feature = "unit_output")]
   async fn test_create_message() {
-    simplelog::TermLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default(), simplelog::TerminalMode::Mixed, simplelog::ColorChoice::Auto).unwrap();
+    simplelog::TermLogger::init(simplelog::LevelFilter::Debug, simplelog::Config::default(), simplelog::TerminalMode::Mixed, simplelog::ColorChoice::Auto).unwrap();
     let config = Config::from_env();
 
     let mut channels_data: Vec<ChannelData> = vec![];
@@ -178,6 +181,22 @@ mod tests {
     }
     let message = create_message(&config, &channels_data);
     println!("Message:\n{:}", message);
+  }
+
+  /// Test channel filtering.
+  #[tokio::test]
+  #[cfg(feature = "unit")]
+  async fn test_filter_channels() {
+    // (channel name, should be ignored)
+    let channels = vec![
+      ("testing", false),
+      ("-prefixed", true),
+      ("ext-another", true),
+      ("keep-me", false),
+      ("--skip-me", true),
+    ];
+    let prefixes = vec!["-", "ext-"];
+    assert!(channels.iter().any(|(n, r)| channel_is_ignored(n, &prefixes) == *r));
   }
 
 }
