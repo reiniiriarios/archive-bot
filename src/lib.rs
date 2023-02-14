@@ -111,7 +111,13 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_pre
     let mut small = false;
     if let Some(c_num_members) = channel.num_members {
       num_members = c_num_members;
-      if num_members < config.small_channel_threshold as i32 {
+      // If in the channel, don't count self.
+      if let Some(is_member) = channel.is_member {
+        if is_member {
+          num_members -= 1;
+        }
+      }
+      if num_members <= config.small_channel_threshold as i32 {
         small = true;
       }
     }
