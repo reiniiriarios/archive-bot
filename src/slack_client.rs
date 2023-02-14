@@ -23,9 +23,12 @@ pub async fn send<'sq>(method: &str, params: &'sq UrlParams<'sq>) -> Result<Slac
 
 #[cfg(test)]
 mod tests {
+  #[cfg(feature = "unit")]
   use crate::Config;
+  #[cfg(feature = "unit")]
   use super::*;
 
+  #[cfg(feature = "unit")]
   #[tokio::test]
   async fn test_auth() {
     let config = Config::from_env();

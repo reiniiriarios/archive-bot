@@ -27,14 +27,18 @@ run cargo within your IDE and notify you of any compile errors.
 
 ### Testing
 
+#### Run Unit Tests
+
 ```
-cargo test
+cargo tu
+```
+
+#### Run Test Output Tests
+
+These tests output test data to `stdout` and can be used to visually check data during development.
+
+```
+cargo to
 ```
 
 See [cargo-test](https://doc.rust-lang.org/cargo/commands/cargo-test.html).
-
-To test notification output w/o posting to Slack:
-
-```
-cargo test create_message -- --nocapture
-```

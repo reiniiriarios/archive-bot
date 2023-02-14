@@ -21,3 +21,9 @@ tokio = { version = "1.25.0", features = ["full"] }
 
 [dev-dependencies]
 simplelog = "0.12.0"
+
+[features]
+default = ["prod"]                             
+unit = []
+unit_output = []
+prod = []

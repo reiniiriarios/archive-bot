@@ -150,9 +150,12 @@ async fn parse_message(message: &Message, stale_after: u32) -> (bool, i64) {
 
 #[cfg(test)]
 mod tests {
+  #[cfg(feature = "unit_output")]
   use super::*;
 
+  /// Create a test message and print it to stdout rather than posting to Slack.
   #[tokio::test]
+  #[cfg(feature = "unit_output")]
   async fn test_create_message() {
     simplelog::TermLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default(), simplelog::TerminalMode::Mixed, simplelog::ColorChoice::Auto).unwrap();
     let config = Config::from_env();
@@ -166,4 +169,5 @@ mod tests {
     let message = create_message(&config, &channels_data);
     println!("Message:\n{:}", message);
   }
+
 }
