@@ -9,7 +9,6 @@
 
 use log::{info, warn};
 
-use substring::Substring;
 use rand::seq::SliceRandom;
 
 mod slack_client;
@@ -88,7 +87,7 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_pre
     channel.name,
     channel.is_member,
   ) {
-    let ignored = ignore_prefixes.contains(&channel_name.substring(0, 1));
+    let ignored = channel_is_ignored(&channel_name, ignore_prefixes);
 
     // TODO join channel
     if !is_member && false {
@@ -146,6 +145,11 @@ async fn parse_message(message: &Message, stale_after: u32) -> (bool, i64) {
   }
 
   (old, t)
+}
+
+/// Whether the channel is ignored based on config.
+fn channel_is_ignored(channel_name: &str, ignore_prefixes: &Vec<&str>) -> bool {
+  ignore_prefixes.iter().any(|n| channel_name.starts_with(n))
 }
 
 #[cfg(test)]
