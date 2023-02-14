@@ -24,7 +24,8 @@ pub struct SlackResponse {
 /// Metadata including next cursor (pagination marker).
 #[derive(Clone, Debug, Deserialize)]
 pub struct SlackResponseMeta {
-  pub next_cursor: Option<String>,
+  #[serde(default)]
+  pub next_cursor: String,
 }
 
 impl<E: Error> Into<Result<SlackResponse, SlackError<E>>> for SlackResponse {

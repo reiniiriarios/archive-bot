@@ -73,32 +73,33 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
 
 /// Parse a specific channel for relevant data, fetching missing data where necessary.
 async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_prefixes: &Vec<&str>) -> Option<ChannelData> {
-  let mut is_member = channel.is_member;
   let ignored = channel_is_ignored(&channel.name, ignore_prefixes);
 
-  if !ignored {
-    is_member = maybe_join_channel(&channel, &config.token).await;
-  }
+  let is_member = match ignored {
+    true => channel.is_member,
+    false => maybe_join_channel(&channel, &config.token).await,
+  };
 
-  let mut last_message_timestamp: i64 = 0;
   let mut old = false;
+  let mut last_message_timestamp = 0;
   if is_member {
     if let Some(history) = slack_get::get_history(&config.token, &channel.id, 1).await {
       if let Some(latest_message) = history.first() {
-        (old, last_message_timestamp) = parse_message(&latest_message, config.stale_after).await;
+        if let Some(ts) = latest_message.ts {
+          let now = chrono::offset::Utc::now().timestamp();
+          old = ts < Timestamp::new(now - config.stale_after as i64);
+          last_message_timestamp = ts.into()
+        }
       }
     }
   }
 
-  let mut small = false;
-  let mut num_members = channel.num_members;
-  // If in the channel, don't count self.
-  if is_member {
-    num_members -= 1;
-  }
-  if num_members <= config.small_channel_threshold as i32 {
-    small = true;
-  }
+  // Don't count self as a member.
+  let num_members = match is_member {
+    true => channel.num_members - 1,
+    false => channel.num_members,
+  };
+  let small = num_members <= config.small_channel_threshold as i32;
 
   Some(ChannelData {
     id: channel.id,
@@ -112,35 +113,18 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_pre
   })
 }
 
+/// Join a channel (maybe). Returns whether the bot is now a member of the channel.
 async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
-  let mut is_member = channel.is_member;
-  if !is_member && !channel.is_private {
+  if !channel.is_member && !channel.is_private {
     log::debug!("Need to join channel #{:} ({:})", channel.name, channel.id);
     if false { // TODO: REMOVE ME
       if let Ok(_) = slack_post::join_channel(&token, &channel.id).await {
-        is_member = true;
         info!("Joined channel #{:} ({:})", channel.name, channel.id);
+        return true;
       }
     }
   }
-  is_member
-}
-
-/// Parse a message to get `is_old` status and timestamp of message.
-async fn parse_message(message: &Message, stale_after: u32) -> (bool, i64) {
-  let mut t: i64 = 0;
-  if let Some(ts) = message.ts {
-    t = ts.into();
-  }
-  let mut old = false;
-  if let Some(ts) = message.ts {
-    let now = chrono::offset::Utc::now().timestamp();
-    if ts < Timestamp::new(now - stale_after as i64) {
-      old = true;
-    }
-  }
-
-  (old, t)
+  channel.is_member
 }
 
 /// Whether the channel is ignored based on config.

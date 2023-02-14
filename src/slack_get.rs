@@ -36,12 +36,10 @@ async fn get_channel_data<'sq>(token: &str, cursor: String) -> (Vec<Channel>, St
 
   match response {
     Ok(resp) => {
-      let mut cursor: String = "".to_string();
-      if let Some(metadata) = resp.response_metadata {
-        if let Some(c) = metadata.next_cursor {
-          cursor = c;
-        }
-      }
+      let cursor = match resp.response_metadata {
+        Some(metadata) => metadata.next_cursor,
+        None => "".into(),
+      };
       if let Some(channels) = resp.channels {
         return (channels, cursor);
       }
