@@ -13,6 +13,7 @@ pub struct ChannelData {
   pub is_old: bool,
   pub is_small: bool,
   pub is_ignored: bool,
+  pub is_private: bool,
 }
 
 impl ChannelData {

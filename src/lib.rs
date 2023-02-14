@@ -78,65 +78,57 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
 
 /// Parse a specific channel for relevant data, fetching missing data where necessary.
 async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_prefixes: &Vec<&str>) -> Option<ChannelData> {
-  if let (
-    Some(channel_id),
-    Some(channel_name),
-    Some(mut is_member),
-  ) = (
-    channel.id,
-    channel.name,
-    channel.is_member,
-  ) {
-    let ignored = channel_is_ignored(&channel_name, ignore_prefixes);
+  let mut is_member = channel.is_member;
+  let ignored = channel_is_ignored(&channel.name, ignore_prefixes);
 
-    // TODO join channel
-    if !is_member && !ignored {
-      log::debug!("Need to join channel #{:} ({:})", channel_name, channel_id);
-      if false { // REMOVE ME
-        if let Ok(_) = slack_post::join_channel(&config.token, &channel_id).await {
-          is_member = true;
-          info!("Joined channel #{:} ({:})", channel_name, channel_id);
-        }
-      }
-    }
-
-    let mut last_message_timestamp: i64 = 0;
-    let mut old = false;
-    if is_member {
-      if let Some(history) = slack_get::get_history(&config.token, &channel_id, 1).await {
-        if let Some(latest_message) = history.first() {
-          (old, last_message_timestamp) = parse_message(&latest_message, config.stale_after).await;
-        }
-      }
-    }
-
-    let mut num_members = 0;
-    let mut small = false;
-    if let Some(c_num_members) = channel.num_members {
-      num_members = c_num_members;
-      // If in the channel, don't count self.
-      if let Some(is_member) = channel.is_member {
-        if is_member {
-          num_members -= 1;
-        }
-      }
-      if num_members <= config.small_channel_threshold as i32 {
-        small = true;
-      }
-    }
-
-    return Some(ChannelData {
-      id: channel_id,
-      name: channel_name,
-      last_message: last_message_timestamp,
-      members_count: num_members,
-      is_old: old,
-      is_small: small,
-      is_ignored: ignored,
-    });
+  if !ignored {
+    is_member = maybe_join_channel(&channel, &config.token).await;
   }
 
-  None
+  let mut last_message_timestamp: i64 = 0;
+  let mut old = false;
+  if is_member {
+    if let Some(history) = slack_get::get_history(&config.token, &channel.id, 1).await {
+      if let Some(latest_message) = history.first() {
+        (old, last_message_timestamp) = parse_message(&latest_message, config.stale_after).await;
+      }
+    }
+  }
+
+  let mut small = false;
+  let mut num_members = channel.num_members;
+  // If in the channel, don't count self.
+  if is_member {
+    num_members -= 1;
+  }
+  if num_members <= config.small_channel_threshold as i32 {
+    small = true;
+  }
+
+  Some(ChannelData {
+    id: channel.id,
+    name: channel.name,
+    last_message: last_message_timestamp,
+    members_count: num_members,
+    is_old: old,
+    is_small: small,
+    is_ignored: ignored,
+    is_private: channel.is_private,
+  })
+}
+
+async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
+  let mut is_member = channel.is_member;
+  if !is_member && !channel.is_private {
+    log::debug!("Need to join channel #{:} ({:})", channel.name, channel.id);
+    if false { // TODO: REMOVE ME
+      if let Ok(_) = slack_post::join_channel(&token, &channel.id).await {
+        is_member = true;
+        info!("Joined channel #{:} ({:})", channel.name, channel.id);
+      }
+    }
+  }
+  is_member
 }
 
 /// Parse a message to get `is_old` status and timestamp of message.

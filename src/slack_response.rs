@@ -42,59 +42,62 @@ impl<E: Error> Into<Result<SlackResponse, SlackError<E>>> for SlackResponse {
 /// https://api.slack.com/types/conversation
 #[derive(Clone, Debug, Deserialize)]
 pub struct Channel {
-  pub id: Option<String>,
-  pub name: Option<String>,
+  pub id: String,
+  #[serde(default)]
+  pub name: String,
+  #[serde(default = "default_true")]
+  #[serde(deserialize_with = "boolean_truthy")]
+  pub is_channel: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_channel: Option<bool>,
+  pub is_group: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_group: Option<bool>,
-  #[serde(default)]
-  #[serde(deserialize_with = "boolean_truthy")]
-  pub is_im: Option<bool>,
+  pub is_im: bool,
   pub created: Option<Timestamp>,
   pub creator: Option<String>,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_archived: Option<bool>,
+  pub is_archived: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_general: Option<bool>,
+  pub is_general: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub unlinked: Option<bool>,
+  pub unlinked: bool,
   pub name_normalized: Option<String>,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_read_only: Option<bool>,
+  pub is_read_only: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_shared: Option<bool>,
+  pub is_shared: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_ext_shared: Option<bool>,
+  pub is_ext_shared: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_org_shared: Option<bool>,
+  pub is_org_shared: bool,
+  #[serde(default)]
   pub pending_shared: Option<Vec<String>>,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_pending_ext_shared: Option<bool>,
+  pub is_pending_ext_shared: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_member: Option<bool>,
+  pub is_member: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_private: Option<bool>,
+  pub is_private: bool,
   #[serde(default)]
   #[serde(deserialize_with = "boolean_truthy")]
-  pub is_mpim: Option<bool>,
+  pub is_mpim: bool,
   pub last_read: Option<String>,
   // topic
   // purpose
   pub previous_names: Option<Vec<String>>,
-  pub num_members: Option<i32>,
+  #[serde(default)]
+  pub num_members: i32,
 }
 
 /// Message data response. Non-comprehensive.
@@ -113,15 +116,18 @@ pub struct Message {
 
 /// Deserialize truthy boolean values (bool, string, int).
 /// The Slack API is inconsistent.
-fn boolean_truthy<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<bool>, D::Error> {
+fn boolean_truthy<'de, D: Deserializer<'de>>(deserializer: D) -> Result<bool, D::Error> {
   match Value::deserialize(deserializer)? {
-    Value::Bool(b) => Ok(Some(b)),
-    Value::String(s) => Ok(Some(s != "0" && s != "" && s != "false" && s != "FALSE")),
-    Value::Number(num) => Ok(Some(num.as_i64().ok_or(de::Error::custom("Invalid number"))? != 0)),
-    Value::Null => Ok(Some(false)),
+    Value::Bool(b) => Ok(b),
+    Value::String(s) => Ok(s != "0" && s != "" && s != "false" && s != "FALSE"),
+    Value::Number(num) => Ok(num.as_i64().ok_or(de::Error::custom("Invalid number"))? != 0),
+    Value::Null => Ok(false),
     _ => return Err(de::Error::custom("Wrong type, expected boolean")),
   }
 }
+
+/// Serde needs a fn, can't accept bool as default value.
+const fn default_true() -> bool { true }
 
 /// Timestamp type for Slack responses.
 /// Slack returns a f64 in a string that cannot be directly parsed.
