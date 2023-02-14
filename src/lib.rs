@@ -80,19 +80,12 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_pre
     false => maybe_join_channel(&channel, &config.token).await,
   };
 
-  let mut old = false;
-  let mut last_message_timestamp = 0;
-  if is_member {
-    if let Some(history) = slack_get::get_history(&config.token, &channel.id, 1).await {
-      if let Some(latest_message) = history.first() {
-        if let Some(ts) = latest_message.ts {
-          let now = chrono::offset::Utc::now().timestamp();
-          old = ts < Timestamp::new(now - config.stale_after as i64);
-          last_message_timestamp = ts.into()
-        }
-      }
-    }
-  }
+  let last_message_timestamp = match is_member {
+    true => get_last_message_timestamp(&channel, &config.token).await,
+    false => 0,
+  };
+  let now = chrono::offset::Utc::now().timestamp();
+  let old = last_message_timestamp > 0 && last_message_timestamp < now - config.stale_after as i64;
 
   // Don't count self as a member.
   let num_members = match is_member {
@@ -125,6 +118,18 @@ async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
     }
   }
   channel.is_member
+}
+
+/// Get timestamp of last message in a channel.
+async fn get_last_message_timestamp(channel: &Channel, token: &str) -> i64 {
+  if let Some(history) = slack_get::get_history(&token, &channel.id, 1).await {
+    if let Some(latest_message) = history.first() {
+      if let Some(ts) = latest_message.ts {
+        return ts.into()
+      }
+    }
+  }
+  0
 }
 
 /// Whether the channel is ignored based on config.
