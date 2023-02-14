@@ -46,24 +46,19 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
   let mut message: String = "".to_string();
   for channel in data {
     if (channel.is_old || channel.is_small) && !channel.is_ignored {
-      let line: String = {
-        if channel.last_message == 0 {
+      let time_msg: String = match (channel.last_message, channel.is_private) {
+        (0, true) => "The channel is private, so I can't read the latest message.".into(),
+        (0, false) => {
           warn!("Unable to parse timestamp for channel #{:} ({:})", channel.name, channel.id);
-          format!(
-            "* <#{id}> has {members} members. I'm having trouble reading the latest message.\n",
-            id=channel.id,
-            members=channel.members_count,
-          )
-        }
-        else {
-          format!(
-            "* <#{id}> has {members} members. The latest message was on {date}.\n",
-            id=channel.id,
-            members=channel.members_count,
-            date=channel.last_message_formatted()
-          )
-        }
+          "I'm having trouble reading the latest message.".into()
+        },
+        _ => format!("The latest message was on {date}.", date=channel.last_message_formatted()),
       };
+      let line = format!(
+        "* <#{id}> has {members} members. {time_msg}\n",
+        id=channel.id,
+        members=channel.members_count,
+      );
       message.push_str(&line);
     }
   }
