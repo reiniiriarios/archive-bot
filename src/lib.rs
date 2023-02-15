@@ -8,8 +8,8 @@
 //! Archive Bot.
 
 use log::{info, warn};
-
 use rand::seq::SliceRandom;
+use chrono;
 
 mod slack_client;
 mod slack_get;
@@ -46,18 +46,18 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
   let mut message: String = "".to_string();
   for channel in data {
     if (channel.is_old || channel.is_small) && !channel.is_ignored {
-      let time_msg: String = match (channel.last_message, channel.is_private) {
+      let time_msg: String = match (channel.last_message_ts, channel.is_private) {
         (0, true) => "The channel is private, so I can't read the latest message.".into(),
         (0, false) => {
           warn!("Unable to parse timestamp for channel #{:} ({:})", channel.name, channel.id);
           "I'm having trouble reading the latest message.".into()
         },
-        _ => format!("The latest message was on {date}.", date=channel.last_message_formatted()),
+        _ => format!("The last message was on {date}.", date=channel.last_message_ts_formatted()),
       };
       let line = format!(
         "* <#{id}> has {members} members. {time_msg}\n",
         id=channel.id,
-        members=channel.members_count,
+        members=channel.num_members,
       );
       message.push_str(&line);
     }
@@ -73,35 +73,35 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
 
 /// Parse a specific channel for relevant data, fetching missing data where necessary.
 async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_prefixes: &Vec<&str>) -> Option<ChannelData> {
-  let ignored = channel_is_ignored(&channel.name, ignore_prefixes);
+  let is_ignored = channel_is_ignored(&channel.name, ignore_prefixes);
 
-  let is_member = match ignored {
+  let is_member = match is_ignored {
     true => channel.is_member,
     false => maybe_join_channel(&channel, &config.token).await,
   };
 
-  let last_message_timestamp = match is_member {
+  let last_message_ts = match is_member {
     true => get_last_message_timestamp(&channel, &config.token).await,
     false => 0,
   };
   let now = chrono::offset::Utc::now().timestamp();
-  let old = last_message_timestamp > 0 && last_message_timestamp < now - config.stale_after as i64;
+  let is_old = last_message_ts > 0 && last_message_ts < now - config.stale_after as i64;
 
   // Don't count self as a member.
   let num_members = match is_member {
     true => channel.num_members - 1,
     false => channel.num_members,
   };
-  let small = num_members <= config.small_channel_threshold as i32;
+  let is_small = num_members <= config.small_channel_threshold as i32;
 
   Some(ChannelData {
     id: channel.id,
     name: channel.name,
-    last_message: last_message_timestamp,
-    members_count: num_members,
-    is_old: old,
-    is_small: small,
-    is_ignored: ignored,
+    last_message_ts,
+    num_members,
+    is_old,
+    is_small,
+    is_ignored,
     is_private: channel.is_private,
   })
 }
@@ -110,7 +110,7 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_pre
 async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
   if !channel.is_member && !channel.is_private {
     log::debug!("Need to join channel #{:} ({:})", channel.name, channel.id);
-    if false { // TODO: REMOVE ME
+    if channel.name == "bot-tester" { // TODO: REMOVE ME
       if let Ok(_) = slack_post::join_channel(&token, &channel.id).await {
         info!("Joined channel #{:} ({:})", channel.name, channel.id);
         return true;
@@ -122,10 +122,13 @@ async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
 
 /// Get timestamp of last message in a channel.
 async fn get_last_message_timestamp(channel: &Channel, token: &str) -> i64 {
-  if let Some(history) = slack_get::get_history(&token, &channel.id, 1).await {
-    if let Some(latest_message) = history.first() {
-      if let Some(ts) = latest_message.ts {
-        return ts.into()
+  if let Some(history) = slack_get::get_history(&token, &channel.id, 10).await {
+    for message in history {
+      log::debug!("m:{:?}", message);
+      if !message.ignore_type() {
+        if let Some(ts) = message.ts {
+          return ts.into();
+        }
       }
     }
   }
@@ -141,6 +144,8 @@ fn channel_is_ignored(channel_name: &str, ignore_prefixes: &Vec<&str>) -> bool {
 mod tests {
   #[cfg(any(feature = "unit", feature="unit_output"))]
   use super::*;
+  #[cfg(feature="unit_output")]
+  use simplelog;
 
   /// Create a test message and print it to stdout rather than posting to Slack.
   #[tokio::test]

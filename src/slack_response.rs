@@ -106,14 +106,44 @@ pub struct Channel {
 #[derive(Clone, Debug, Deserialize)]
 pub struct Message {
   #[serde(rename = "type")]
-  pub event_type: Option<String>,
-  pub subtype: Option<String>,
+  #[serde(default)]
+  pub event_type: String,
+  #[serde(default)]
+  pub subtype: String,
   pub channel: Option<String>,
   pub user: Option<String>,
   pub text: Option<String>,
   pub ts: Option<Timestamp>,
   // edited
 }
+
+const IGNORED_MESSAGE_TYPES: [&'static str; 15] = [
+  "bot_add",
+  "bot_remove",
+  "bot_message",
+  "message_deleted",
+  "channel_join",
+  "channel_leave",
+  "channel_topic",
+  "channel_purpose",
+  "channel_name",
+  "channel_archive",
+  "channel_unarchive",
+  "pinned_item",
+  "unpinned_item",
+  "ekm_access_denied",
+  "channel_posting_permissions",
+];
+
+impl Message {
+  pub fn ignore_type(&self) -> bool {
+    if self.event_type != "message" {
+      return true;
+    }
+    IGNORED_MESSAGE_TYPES.iter().any(|t| &self.subtype == t)
+  }
+}
+
 
 /// Deserialize truthy boolean values (bool, string, int).
 /// The Slack API is inconsistent.
