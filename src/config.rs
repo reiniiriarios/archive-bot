@@ -50,3 +50,6 @@ impl<'cfg> Config<'cfg> {
     }
   }
 }
+
+/// How many messages to pull from a channel to recent activity.
+pub const MESSAGE_HISTORY_LENGTH: u16 = 10;

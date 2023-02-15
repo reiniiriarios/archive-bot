@@ -7,6 +7,7 @@
 
 //! Archive Bot.
 
+use config::MESSAGE_HISTORY_LENGTH;
 use log::info;
 use rand::seq::SliceRandom;
 use chrono;
@@ -49,7 +50,7 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
       let time_msg: String = match channel {
         ChannelData { is_private: true, .. } => "The channel is private, so I can't read the latest message.".into(),
         ChannelData { last_message_ts: 0, .. } => "No recent messages.".into(),
-        ChannelData { last_message_relevant: false, .. } => format!("The last event was on {date}, but no recent messages.", date=channel.last_message_ts_formatted()),
+        ChannelData { last_message_relevant: false, .. } => format!("The last event was on {date}, but there are no recent messages.", date=channel.last_message_ts_formatted()),
         _ => format!("The last message was on {date}.", date=channel.last_message_ts_formatted()),
       };
       let line = format!(
@@ -133,7 +134,7 @@ async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
 
 /// Get timestamp of last message in a channel.
 async fn get_last_message(channel: &Channel, token: &str) -> Option<Message> {
-  if let Some(history) = slack_get::get_history(&token, &channel.id, 10).await {
+  if let Some(history) = slack_get::get_history(&token, &channel.id, MESSAGE_HISTORY_LENGTH).await {
     for message in history.clone() {
       if !message.ignore_type() {
         if let Some(_ts) = message.ts {
