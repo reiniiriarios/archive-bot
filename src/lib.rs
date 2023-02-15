@@ -7,7 +7,7 @@
 
 //! Archive Bot.
 
-use log::{info, warn};
+use log::info;
 use rand::seq::SliceRandom;
 use chrono;
 
@@ -46,12 +46,10 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
   let mut message: String = "".to_string();
   for channel in data {
     if (channel.is_old || channel.is_small) && !channel.is_ignored {
-      let time_msg: String = match (channel.last_message_ts, channel.is_private) {
-        (0, true) => "The channel is private, so I can't read the latest message.".into(),
-        (0, false) => {
-          warn!("Unable to parse timestamp for channel #{:} ({:})", channel.name, channel.id);
-          "I'm having trouble reading the latest message.".into()
-        },
+      let time_msg: String = match channel {
+        ChannelData { is_private: true, .. } => "The channel is private, so I can't read the latest message.".into(),
+        ChannelData { last_message_ts: 0, .. } => "No recent messages.".into(),
+        ChannelData { last_message_relevant: false, .. } => format!("The last event was on {date}, but no recent messages.", date=channel.last_message_ts_formatted()),
         _ => format!("The last message was on {date}.", date=channel.last_message_ts_formatted()),
       };
       let line = format!(
@@ -80,12 +78,24 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_pre
     false => maybe_join_channel(&channel, &config.token).await,
   };
 
-  let last_message_ts = match is_member {
-    true => get_last_message_timestamp(&channel, &config.token).await,
-    false => 0,
-  };
-  let now = chrono::offset::Utc::now().timestamp();
-  let is_old = last_message_ts > 0 && last_message_ts < now - config.stale_after as i64;
+  let mut last_message_ts = 0;
+  let mut last_message_relevant = false;
+  let mut is_old = false;
+
+  if is_member && !is_ignored {
+    (last_message_ts, last_message_relevant, is_old) = match get_last_message(&channel, &config.token).await {
+      Some(msg) => {
+        let last_message_ts = match msg.ts {
+          Some(ts) => ts.into(),
+          None => 0,
+        };
+        let now = chrono::offset::Utc::now().timestamp();
+        let is_old = last_message_ts > 0 && last_message_ts < now - config.stale_after as i64;
+        (last_message_ts, !msg.ignore_type(), is_old)
+      },
+      None => (0, false, true),
+    };
+  }
 
   // Don't count self as a member.
   let num_members = match is_member {
@@ -98,6 +108,7 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_pre
     id: channel.id,
     name: channel.name,
     last_message_ts,
+    last_message_relevant,
     num_members,
     is_old,
     is_small,
@@ -121,18 +132,20 @@ async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
 }
 
 /// Get timestamp of last message in a channel.
-async fn get_last_message_timestamp(channel: &Channel, token: &str) -> i64 {
+async fn get_last_message(channel: &Channel, token: &str) -> Option<Message> {
   if let Some(history) = slack_get::get_history(&token, &channel.id, 10).await {
-    for message in history {
-      log::debug!("m:{:?}", message);
+    for message in history.clone() {
       if !message.ignore_type() {
-        if let Some(ts) = message.ts {
-          return ts.into();
+        if let Some(_ts) = message.ts {
+          return Some(message);
         }
       }
     }
+    if let Some(first) = history.first() {
+      return Some(first.to_owned());
+    }
   }
-  0
+  None
 }
 
 /// Whether the channel is ignored based on config.

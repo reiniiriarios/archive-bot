@@ -9,6 +9,7 @@ pub struct ChannelData {
   pub id: String,
   pub name: String,
   pub last_message_ts: i64,
+  pub last_message_relevant: bool,
   pub num_members: i32,
   pub is_old: bool,
   pub is_small: bool,
