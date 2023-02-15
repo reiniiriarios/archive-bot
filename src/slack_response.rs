@@ -117,6 +117,8 @@ pub struct Message {
   // edited
 }
 
+/// Treat these event message subtypes as irrelevant to channel activity.
+/// see https://api.slack.com/events/message#subtypes
 const IGNORED_MESSAGE_TYPES: [&'static str; 15] = [
   "bot_add",
   "bot_remove",
@@ -136,6 +138,7 @@ const IGNORED_MESSAGE_TYPES: [&'static str; 15] = [
 ];
 
 impl Message {
+  /// Whether the message is irrelevant to channel activity.
   pub fn ignore_type(&self) -> bool {
     if self.event_type != "message" {
       return true;
