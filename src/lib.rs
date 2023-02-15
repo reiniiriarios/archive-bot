@@ -26,7 +26,7 @@ pub use self::config::Config;
 pub async fn run<'cfg>(config: &Config<'cfg>) -> Result<(), Box<dyn std::error::Error>> {
   let mut channels_data: Vec<ChannelData> = vec![];
   for channel in slack_get::get_channels(&config.token).await {
-    if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
+    if let Some(channel_data) = parse_channel(&config, channel).await {
       channels_data.push(channel_data);
     }
   }
@@ -70,8 +70,8 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
 }
 
 /// Parse a specific channel for relevant data, fetching missing data where necessary.
-async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel, ignore_prefixes: &Vec<&str>) -> Option<ChannelData> {
-  let is_ignored = channel_is_ignored(&channel.name, ignore_prefixes);
+async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel) -> Option<ChannelData> {
+  let is_ignored = channel_is_ignored(&channel.name, &config.filter_prefixes);
 
   let is_member = match is_ignored {
     true => channel.is_member,
@@ -191,6 +191,58 @@ mod tests {
     ];
     let prefixes = vec!["-", "ext-"];
     assert!(channels.iter().any(|(n, r)| channel_is_ignored(n, &prefixes) == *r));
+  }
+
+  /// Test channel parsing.
+  #[tokio::test]
+  #[cfg(feature = "unit")]
+  async fn test_parse_channel() {
+    use crate::types::ChannelData;
+
+    let config = Config::from_env();
+
+    let channel: Channel = Channel {
+      id: "fake_id".to_string(),
+      name: "fake-name".to_string(),
+      is_channel: true,
+      is_group: false,
+      is_im: false,
+      is_archived: false,
+      is_general: false,
+      unlinked: false,
+      is_read_only: false,
+      is_shared: false,
+      is_ext_shared: false,
+      is_org_shared: false,
+      is_pending_ext_shared: false,
+      is_member: false,
+      is_private: true,
+      is_mpim: false,
+      num_members: 3,
+      creator: None,
+      created: None,
+      last_read: None,
+      name_normalized: None,
+      pending_shared: None,
+      previous_names: None,
+    };
+
+    let test_channel_data: ChannelData = ChannelData {
+      id: "fake_id".to_string(),
+      name: "fake-name".to_string(),
+      last_message_ts: 0,
+      last_message_relevant: false,
+      num_members: 3,
+      is_old: false,
+      is_small: true,
+      is_ignored: false,
+      is_private: true,
+    };
+
+    match parse_channel(&config, channel).await {
+      Some(channel_data) => assert_eq!(channel_data, test_channel_data),
+      None => assert!(false),
+    }
   }
 
 }

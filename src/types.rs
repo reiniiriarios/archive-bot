@@ -5,6 +5,7 @@ use chrono::NaiveDateTime;
 pub type UrlParams<'sq> = Vec<(&'sq str, &'sq str)>;
 
 /// Parsed channel data.
+#[derive(Debug, PartialEq)]
 pub struct ChannelData {
   pub id: String,
   pub name: String,
