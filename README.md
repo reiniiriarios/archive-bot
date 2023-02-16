@@ -7,7 +7,7 @@ Slack bot helper for managing outdated and very small channels.
 Archive bot needs a bit of data to get started:
 
 - Slack API Key
-- Notification [Channel ID](#finding-slack-channel-id)
+- Notification [Channel ID](https://github.com/reiniiriarios/archive-bot/#finding-slack-channel-id)
 - Filter Prefixes (optional)
 - Messages (optional)
 - Staleness (optional)
@@ -49,7 +49,7 @@ match archive_bot::run(&config).await {
 }
 ```
 
-See the [examples](examples/) directory for further implementation details.
+See the [examples](https://github.com/reiniiriarios/archive-bot/examples/) directory for further implementation details.
 
 ## Setting Up Slack
 
