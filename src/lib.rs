@@ -170,7 +170,7 @@ mod tests {
 
     let mut channels_data: Vec<ChannelData> = vec![];
     for channel in slack_get::get_channels(&config.token).await {
-      if let Some(channel_data) = parse_channel(&config, channel, &config.filter_prefixes).await {
+      if let Some(channel_data) = parse_channel(&config, channel).await {
         channels_data.push(channel_data);
       }
     }
