@@ -33,9 +33,14 @@ pub async fn run<'cfg>(config: &Config<'cfg>) -> Result<(), Box<dyn std::error::
   }
   let message = create_message(&config, &channels_data);
   if message != "" {
-    let post = slack_post::post_message(&config.token, &config.notification_channel_id, &message).await;
-    if let Ok(_) = post {
+    if let Ok(_) = slack_post::post_message(&config.token, &config.notification_channel_id, &message).await {
       info!("Posted update in {:}", config.notification_channel_id);
+      if config.notify_secondary_channel {
+        let secondary_message = create_secondary_message(&config);
+        if let Ok(_) = slack_post::post_message(&config.token, &config.secondary_notification_channel_id, &secondary_message).await {
+          info!("Posted secondary update in {:}", config.secondary_notification_channel_id);
+        }
+      }
     }
   }
 
@@ -68,6 +73,12 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
   }
 
   message
+}
+
+/// Create secondary notification message.
+fn create_secondary_message<'cfg>(config: &Config<'cfg>) -> String {
+  let line_a = config.secondary_message_headers.choose(&mut rand::thread_rng()).unwrap().to_string();
+  format!("{} See <#{}> for details.", line_a, config.notification_channel_id)
 }
 
 /// Parse a specific channel for relevant data, fetching missing data where necessary.
@@ -166,7 +177,7 @@ mod tests {
   #[cfg(feature = "unit_output")]
   async fn test_create_message() {
     simplelog::TermLogger::init(simplelog::LevelFilter::Debug, simplelog::Config::default(), simplelog::TerminalMode::Mixed, simplelog::ColorChoice::Auto).unwrap();
-    let config = Config::from_env();
+    let config = Config::from_env_debug();
 
     let mut channels_data: Vec<ChannelData> = vec![];
     for channel in slack_get::get_channels(&config.token).await {
@@ -175,6 +186,16 @@ mod tests {
       }
     }
     let message = create_message(&config, &channels_data);
+    println!("Message:\n{:}", message);
+  }
+
+  /// Create a test secondary message and print it to stdout rather than posting to Slack.
+  #[test]
+  #[cfg(feature = "unit_output")]
+  fn test_create_secondary_message() {
+    simplelog::TermLogger::init(simplelog::LevelFilter::Debug, simplelog::Config::default(), simplelog::TerminalMode::Mixed, simplelog::ColorChoice::Auto).unwrap();
+    let config = Config::from_env_debug();
+    let message = create_secondary_message(&config);
     println!("Message:\n{:}", message);
   }
 
@@ -200,7 +221,7 @@ mod tests {
   async fn test_parse_channel() {
     use crate::types::ChannelData;
 
-    let config = Config::from_env();
+    let config = Config::from_env_debug();
 
     let channel: Channel = Channel {
       id: "fake_id".to_string(),

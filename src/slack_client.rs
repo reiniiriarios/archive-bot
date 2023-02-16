@@ -31,7 +31,7 @@ mod tests {
   #[cfg(feature = "unit")]
   #[tokio::test]
   async fn test_auth() {
-    let config = Config::from_env();
+    let config = Config::from_env_debug();
     let params: UrlParams = vec![("token", &config.token)];
     if let Ok(auth) = send("auth.test", &params).await {
       if let Some(user) = auth.user {
