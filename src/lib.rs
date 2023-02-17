@@ -133,11 +133,9 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel) -> Option<
 async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
   if !channel.is_member && !channel.is_private {
     log::debug!("Need to join channel #{:} ({:})", channel.name, channel.id);
-    if channel.name == "bot-tester" { // TODO: REMOVE ME
-      if let Ok(_) = slack_post::join_channel(&token, &channel.id).await {
-        info!("Joined channel #{:} ({:})", channel.name, channel.id);
-        return true;
-      }
+    if let Ok(_) = slack_post::join_channel(&token, &channel.id).await {
+      info!("Joined channel #{:} ({:})", channel.name, channel.id);
+      return true;
     }
   }
   channel.is_member
