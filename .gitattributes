@@ -1,0 +1,3 @@
+# Enable syntax highlighting on GitHub.
+*.rs.example linguist-language=Rust
+*.toml.example linguist-language=TOML
