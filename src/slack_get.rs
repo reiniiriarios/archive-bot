@@ -77,3 +77,26 @@ pub async fn get_history(token: &str, channel_id: &str, limit: u16) -> Option<Ve
     }
   }
 }
+
+#[cfg(test)]
+mod tests {
+  #[cfg(feature="unit_output")]
+  use super::*;
+  #[cfg(feature="unit_output")]
+  use simplelog;
+
+  /// Create a test message and print it to stdout rather than posting to Slack.
+  #[tokio::test]
+  #[cfg(feature = "unit_output")]
+  async fn test_list_channels() {
+    simplelog::TermLogger::init(simplelog::LevelFilter::Debug, simplelog::Config::default(), simplelog::TerminalMode::Mixed, simplelog::ColorChoice::Auto).unwrap();
+    let config = crate::config::Config::from_env_debug();
+
+    let mut channel_names: String = String::from("");
+    for channel in get_channels(&config.token).await {
+      let check = { if channel.is_member { "✅" } else { "❌" } };
+      channel_names.push_str(&format!("{} #{}\n", check, channel.name).to_owned());
+    }
+    println!("Channels:\n{:}", channel_names);
+  }
+}
