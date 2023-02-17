@@ -23,6 +23,7 @@ impl ChannelData {
   pub fn last_message_ts_formatted(&self) -> String {
     let t: i64 = self.last_message_ts;
     if t == 0 { return "[unable to parse timestamp]".to_string() }
-    NaiveDateTime::from_timestamp_opt(t, 0).unwrap().format("%b %d, %Y").to_string()
+    let fallback = NaiveDateTime::from_timestamp_opt(t, 0).unwrap().format("%b %d, %Y UTC");
+    format!("<!date^{}^{{date_short}}|{}>", t, fallback)
   }
 }
