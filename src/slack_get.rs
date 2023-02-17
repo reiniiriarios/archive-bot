@@ -2,7 +2,7 @@ use super::slack_client;
 use crate::types::UrlParams;
 use crate::slack_error::SlackError;
 use crate::slack_response::{SlackResponse, Channel, Message};
-use log::warn;
+use log::{debug, warn};
 
 /// Get a comprehensive list of basic channel data.
 pub async fn get_channels<'sq>(token: &str) -> Vec<Channel> {
@@ -16,6 +16,8 @@ pub async fn get_channels<'sq>(token: &str) -> Vec<Channel> {
     }
     cursor = next_cursor;
   }
+  debug!("{} channels found", channels.len());
+
   channels
 }
 
