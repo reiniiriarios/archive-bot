@@ -51,19 +51,27 @@ pub async fn run<'cfg>(config: &Config<'cfg>) -> Result<(), Box<dyn std::error::
 fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> String {
   let mut message: String = "".to_string();
   for channel in data {
-    if (channel.is_old || channel.is_small) && !channel.is_ignored {
+    if channel_should_be_mentioned(&channel) {
+      let mbr_msg: String = match channel {
+        ChannelData { is_small: true, .. } => format!("has *{} members*.", channel.num_members),
+        _ => format!("has {} members.", channel.num_members),
+      };
+
       let time_msg: String = match channel {
         ChannelData { is_private: true, .. } => "The channel is private, so I can't read the latest message.".into(),
         ChannelData { last_message_ts: 0, .. } => "No recent messages.".into(),
-        ChannelData { last_message_relevant: false, .. } => format!("The last event was on {date}, but there are no recent messages.", date=channel.last_message_ts_formatted()),
+        ChannelData { last_message_relevant: false, is_old: true, .. } => format!("The last event was on *{date}*, but there are no recent messages.", date=channel.last_message_ts_formatted()),
+        ChannelData { last_message_relevant: false, is_old: false, .. } => format!("The last event was on {date}, but there are no recent messages.", date=channel.last_message_ts_formatted()),
+        ChannelData { is_old: true, .. } => format!("The last message was on *{date}*.", date=channel.last_message_ts_formatted()),
         _ => format!("The last message was on {date}.", date=channel.last_message_ts_formatted()),
       };
-      let line = format!(
-        "* <#{id}> has {members} members. {time_msg}\n",
+
+      message.push_str(&format!(
+        "* <#{id}> {members} {time}\n",
         id=channel.id,
-        members=channel.num_members,
-      );
-      message.push_str(&line);
+        members=mbr_msg,
+        time=time_msg
+      ));
     }
   }
 
@@ -73,6 +81,11 @@ fn create_message<'cfg>(config: &Config<'cfg>, data: &Vec<ChannelData>) -> Strin
   }
 
   message
+}
+
+/// Whether a channel should be included in updates.
+fn channel_should_be_mentioned(channel: &ChannelData) -> bool {
+  (channel.is_old || channel.is_small) && !channel.is_ignored
 }
 
 /// Create secondary notification message.
