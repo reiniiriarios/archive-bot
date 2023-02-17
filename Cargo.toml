@@ -1,6 +1,6 @@
 [package]
 name = "archive_bot"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Emma Litwa-Vulcu <80431903+reiniiriarios@users.noreply.github.com>"]
 repository = "https://github.com/reiniiriarios/archive-bot"
 description = "Slack bot helper for managing outdated channels."
