@@ -1,0 +1,66 @@
+use std::env;
+use std::collections::HashMap;
+use log::{info, error, LevelFilter};
+use simplelog::*;
+use lambda_runtime::{service_fn, Error, LambdaEvent};
+use serde::Serialize;
+use serde_json::{json, Value};
+use archive_bot;
+
+/// Enable logger and add Lambda function handler.
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+  let log_config = ConfigBuilder::new().set_time_format_rfc2822().build();
+  TermLogger::init(LevelFilter::Info, log_config, TerminalMode::Mixed, ColorChoice::Auto).unwrap();
+
+  let func = service_fn(archive_bot_handler);
+  lambda_runtime::run(func).await?;
+  Ok(())
+}
+
+/// Response to send.
+#[derive(Serialize)]
+#[allow(non_snake_case)]
+struct Response {
+  // Note: `statusCode` is correct for Netlify, but not Rust convention.
+  statusCode: u16,
+  headers: HashMap<String, String>,
+  body: Option<String>,
+}
+
+impl Response {
+  /// Build a simple json response from a `&str`.
+  pub fn from_str(body: &str) -> Self {
+    let mut header_map = HashMap::new();
+    header_map.insert("Content-Type".to_string(), "application/json".to_string());
+    Self {
+      statusCode: 200,
+      headers: header_map,
+      body: Some(json!({"message": body}).to_string()),
+    }
+  }
+}
+
+/// Bot handler.
+pub(crate) async fn archive_bot_handler(_event: LambdaEvent<Value>) -> Result<Response, Error> {
+  let bot_token = match env::var("SLACK_BOT_TOKEN") {
+    Ok(token) => token,
+    Err(_) => {
+      error!("Environment variable SLACK_BOT_TOKEN is not set.");
+      return Ok(Response::from_str("configuration error"));
+    }
+  };
+
+  let config = archive_bot::Config {
+    token: bot_token,
+    notification_channel_id: "C0123456789".to_string(),
+    ..archive_bot::Config::default()
+  };
+
+  match archive_bot::run(&config).await {
+    Ok(_) => info!("Run complete."),
+    Err(e) => error!("Run failed: {:}", e),
+  }
+
+  Ok(Response::from_str("complete"))
+}
