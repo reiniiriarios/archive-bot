@@ -35,7 +35,7 @@ impl<'cfg> Default for Config<'cfg> {
         "Hey boss, take a look at these, will ya?",
         "I don't know what this is, or what to do with it:",
       ],
-      stale_after: 2 * 7 * 24 * 60 * 60,
+      stale_after: 6 * 7 * 24 * 60 * 60,
       small_channel_threshold: 3,
       notify_secondary_channel: false,
       secondary_notification_channel_id: "".to_string(),
