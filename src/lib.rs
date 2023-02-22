@@ -11,6 +11,7 @@ use config::MESSAGE_HISTORY_LENGTH;
 use log::info;
 use rand::seq::SliceRandom;
 use chrono;
+use futures::future;
 
 mod slack_client;
 mod slack_get;
@@ -24,13 +25,18 @@ mod config;
 pub use self::config::Config;
 
 /// Run Archive Bot.
-pub async fn run<'cfg>(config: &Config<'cfg>) -> Result<(), Box<dyn std::error::Error>> {
-  let mut channels_data: Vec<ChannelData> = vec![];
-  for channel in slack_get::get_channels(&config.token).await {
-    if let Some(channel_data) = parse_channel(&config, channel).await {
-      channels_data.push(channel_data);
-    }
+pub async fn run<'cfg>(config: &'cfg Config<'cfg>) -> Result<(), Box<dyn std::error::Error>> {
+  // Get channels.
+  let channels = slack_get::get_channels(&config.token).await;
+
+  // Parse each channel concurrently.
+  let mut tasks = vec![];
+  for channel in &channels {
+    tasks.push(parse_channel(&config, &channel));
   }
+  let channels_data = future::join_all(tasks).await;
+
+  // Build and send message.
   let message = create_message(&config, &channels_data);
   if message != "" {
     if let Ok(_) = slack_post::post_message(&config.token, &config.notification_channel_id, &message).await {
@@ -95,7 +101,7 @@ fn create_secondary_message<'cfg>(config: &Config<'cfg>) -> String {
 }
 
 /// Parse a specific channel for relevant data, fetching missing data where necessary.
-async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel) -> Option<ChannelData> {
+async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: &Channel) -> ChannelData {
   let is_ignored = channel_is_ignored(&channel.name, &config.filter_prefixes);
 
   let is_member = match is_ignored {
@@ -129,9 +135,9 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel) -> Option<
   };
   let is_small = num_members <= config.small_channel_threshold as i32;
 
-  Some(ChannelData {
-    id: channel.id,
-    name: channel.name,
+  ChannelData {
+    id: channel.id.clone(),
+    name: channel.name.clone(),
     last_message_ts,
     last_message_relevant,
     num_members,
@@ -139,11 +145,11 @@ async fn parse_channel<'cfg>(config: &Config<'cfg>, channel: Channel) -> Option<
     is_small,
     is_ignored,
     is_private: channel.is_private,
-  })
+  }
 }
 
 /// Join a channel (maybe). Returns whether the bot is now a member of the channel.
-async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
+async fn maybe_join_channel<'cfg>(channel: &Channel, token: &'cfg str) -> bool {
   if !channel.is_member && !channel.is_private {
     log::debug!("Need to join channel #{:} ({:})", channel.name, channel.id);
     if let Ok(_) = slack_post::join_channel(&token, &channel.id).await {
@@ -155,7 +161,7 @@ async fn maybe_join_channel(channel: &Channel, token: &str) -> bool {
 }
 
 /// Get timestamp of last message in a channel.
-async fn get_last_message(channel: &Channel, token: &str) -> Option<Message> {
+async fn get_last_message<'cfg>(channel: &Channel, token: &'cfg str) -> Option<Message> {
   if let Some(history) = slack_get::get_history(&token, &channel.id, MESSAGE_HISTORY_LENGTH).await {
     for message in history.clone() {
       if !message.ignore_type() {
@@ -172,7 +178,7 @@ async fn get_last_message(channel: &Channel, token: &str) -> Option<Message> {
 }
 
 /// Whether the channel is ignored based on config.
-fn channel_is_ignored(channel_name: &str, ignore_prefixes: &Vec<&str>) -> bool {
+fn channel_is_ignored<'cfg>(channel_name: &str, ignore_prefixes: &'cfg Vec<&'cfg str>) -> bool {
   ignore_prefixes.iter().any(|n| channel_name.starts_with(n))
 }
 
@@ -192,9 +198,7 @@ mod tests {
 
     let mut channels_data: Vec<ChannelData> = vec![];
     for channel in slack_get::get_channels(&config.token).await {
-      if let Some(channel_data) = parse_channel(&config, channel).await {
-        channels_data.push(channel_data);
-      }
+      channels_data.push(parse_channel(&config, &channel).await);
     }
     let message = create_message(&config, &channels_data);
     println!("Message:\n{:}", message);
