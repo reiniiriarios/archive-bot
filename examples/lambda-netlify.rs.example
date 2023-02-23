@@ -5,7 +5,7 @@ use simplelog::*;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use serde::Serialize;
 use serde_json::{json, Value};
-use archive_bot;
+use archive_bot::ArchiveBot;
 
 /// Enable logger and add Lambda function handler.
 #[tokio::main]
@@ -51,13 +51,13 @@ pub(crate) async fn archive_bot_handler(_event: LambdaEvent<Value>) -> Result<Re
     }
   };
 
-  let config = archive_bot::Config {
+  let bot = ArchiveBot {
     token: bot_token,
     notification_channel_id: "C0123456789".to_string(),
-    ..archive_bot::Config::default()
+    ..ArchiveBot::default()
   };
 
-  match archive_bot::run(&config).await {
+  match bot.run().await {
     Ok(_) => info!("Run complete."),
     Err(e) => error!("Run failed: {:}", e),
   }

@@ -19,7 +19,7 @@ Archive bot needs a bit of data to get started:
     - Configure how small a channel has to be before it's considered "small."
 
 ```rust
-let config = archive_bot::Config {
+let bot = ArchiveBot {
   // Bot tokens look like: xoxb-xxxxxxxyourtokenxxxxxxx.
   token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
   // Use the channel ID and not the name.
@@ -32,7 +32,7 @@ let config = archive_bot::Config {
     "Hey boss, take a look at these, will ya?",
   ],
   // How long before a channel is stale (in seconds).
-  stale_after: 2 * 7 * 24 * 60 * 60,
+  stale_after: 6 * 7 * 24 * 60 * 60,
   // How small a "small" channel is.
   small_channel_threshold: 3,
   // Whether to send a secondary notification to a different channel (message only).
@@ -44,17 +44,17 @@ let config = archive_bot::Config {
     "Hey folks! I, uh... made a list for you. Of channels. That you should archive. Maybe.",
     "Hey everyone! If you want the satisfaction of crossing a task off your list, I have one!",
   ],
-  ..archive_bot::Config::default()
+  ..ArchiveBot::default()
 };
 ```
 
 Or, using default values:
 
 ```rust
-let config = archive_bot::Config {
+let bot = ArchiveBot {
   token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
   notification_channel_id: "C01A02A03A04".to_string(),
-  ..archive_bot::Config::default()
+  ..ArchiveBot::default()
 };
 ```
 
@@ -64,7 +64,7 @@ Currently this bot consists of a single runtime, with a single action. Further a
 config options TBD.
 
 ```rust
-match archive_bot::run(&config).await {
+match bot.run().await {
   Ok(_) => println!("Success!"),
   Err(e) => panic!("Uhoh! {:}", e),
 }

@@ -1,9 +1,9 @@
 use std::env;
-use archive_bot;
+use archive_bot::ArchiveBot;
 
 #[tokio::main]
 async fn main() {
-  let config = archive_bot::Config {
+  let bot = ArchiveBot {
     token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
     notification_channel_id: env::var("SLACK_CHANNEL_ID").expect("Error: environment variable SLACK_CHANNEL_ID is not set."),
     filter_prefixes: vec!["-"],
@@ -13,10 +13,10 @@ async fn main() {
     ],
     stale_after: 2 * 7 * 24 * 60 * 60,
     small_channel_threshold: 3,
-    ..archive_bot::Config::default()
+    ..ArchiveBot::default()
   };
 
-  match archive_bot::run(&config).await {
+  match bot.run().await {
     Ok(_) => println!("Success!"),
     Err(e) => panic!("Uhoh! {:}", e),
   }
