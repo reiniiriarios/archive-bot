@@ -185,17 +185,13 @@ impl ArchiveBot {
     let mut is_old = false;
 
     if is_member && !is_ignored {
-      (last_message_ts, last_message_relevant, is_old) = match self.get_last_message(&channel).await {
-        Some(msg) => {
-          let last_message_ts = match msg.ts {
-            Some(ts) => ts.into(),
-            None => 0,
-          };
-          let now = chrono::offset::Utc::now().timestamp();
-          let is_old = last_message_ts > 0 && last_message_ts < now - self.stale_after as i64;
-          (last_message_ts, !msg.ignore_type(), is_old)
-        },
-        None => (0, false, true),
+      if let Some(msg) = self.get_last_message(&channel).await {
+        if let Some(ts) = msg.ts {
+          last_message_ts = ts.into();
+        }
+        last_message_relevant = !msg.ignore_type();
+        let now = chrono::offset::Utc::now().timestamp();
+        is_old = last_message_ts > 0 && last_message_ts < now - self.stale_after as i64;
       };
     }
 
