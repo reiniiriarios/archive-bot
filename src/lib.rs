@@ -84,12 +84,13 @@ impl ArchiveBot {
 
   /// Create a configuration from environment variables for debug purposes.
   fn _from_env_debug() -> ArchiveBot {
+    let test_channel = env::var("SLACK_CHANNEL_TEST_ID").expect("Error: environment variable SLACK_CHANNEL_TEST_ID is not set.");
     ArchiveBot {
       token: env::var("SLACK_BOT_TOKEN").expect("Error: environment variable SLACK_BOT_TOKEN is not set."),
-      notification_channel_id: env::var("SLACK_CHANNEL_ID").expect("Error: environment variable SLACK_CHANNEL_ID is not set."),
+      notification_channel_id: test_channel.clone(),
       filter_prefixes: vec!["-", "ext-"],
       notify_secondary_channel: true,
-      secondary_notification_channel_id: env::var("SLACK_CHANNEL2_ID").expect("Error: environment variable SLACK_CHANNEL2_ID is not set."),
+      secondary_notification_channel_id: test_channel,
       ..ArchiveBot::default()
     }
   }
