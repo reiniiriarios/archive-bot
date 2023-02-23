@@ -95,10 +95,7 @@ impl ArchiveBot {
   }
 
   /// Run Archive Bot.
-  pub async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-    // Set up the slack client with the data it needs.
-    self.token = self.token.to_owned();
-
+  pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
     // Get channels.
     let channels = self.get_channels().await;
 
