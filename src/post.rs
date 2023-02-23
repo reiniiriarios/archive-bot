@@ -37,3 +37,27 @@ impl ArchiveBot {
     }
   }
 }
+
+#[cfg(test)]
+mod tests {
+  #[cfg(feature="unit_output")]
+  use std::env;
+  #[cfg(feature="unit_output")]
+  use log::{info, error};
+  #[cfg(feature="unit_output")]
+  use simplelog;
+
+  /// Create a test message and print it to stdout rather than posting to Slack.
+  #[tokio::test]
+  #[cfg(feature = "unit_output")]
+  async fn test_send_message() {
+    simplelog::TermLogger::init(simplelog::LevelFilter::Debug, simplelog::Config::default(), simplelog::TerminalMode::Mixed, simplelog::ColorChoice::Auto).unwrap();
+    let bot = crate::ArchiveBot::_from_env_debug();
+    let channel_id = env::var("SLACK_CHANNEL_TEST_ID").expect("Error: environment variable SLACK_CHANNEL_TEST_ID is not set.");
+    let message = "Testing, 1 2 3. :robot_face:";
+    match bot.post_message(&channel_id, message).await {
+      Ok(_) => info!("Message sent."),
+      Err(e) => error!("Error: {}", e),
+    }
+  }
+}
