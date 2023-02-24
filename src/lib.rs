@@ -143,8 +143,9 @@ impl ArchiveBot {
           _ => format!("The last message was on {date}.", date=channel.last_message_ts_formatted()),
         };
 
+        // mrkdwn parsed, but no list format; using * breaks *bold* text
         message.push_str(&format!(
-          "* <#{id}> {members} {time}\n",
+          "- <#{id}> {members} {time}\n",
           id=channel.id,
           members=mbr_msg,
           time=time_msg
