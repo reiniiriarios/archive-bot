@@ -129,9 +129,13 @@ impl ArchiveBot {
     let mut message: String = "".to_string();
     for channel in data {
       if self.channel_should_be_mentioned(&channel) {
+        let s: &str = match channel.num_members {
+          1 => "",
+          _ => "s",
+        };
         let mbr_msg: String = match channel {
-          ChannelData { is_small: true, .. } => format!("has *{} members*.", channel.num_members),
-          _ => format!("has {} members.", channel.num_members),
+          ChannelData { is_small: true, .. } => format!("has *{} member{}*.", channel.num_members, s),
+          _ => format!("has {} member{}.", channel.num_members, s),
         };
 
         let time_msg: String = match channel {
