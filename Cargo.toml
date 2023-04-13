@@ -10,20 +10,20 @@ edition = "2021"
 exclude = ["/examples", "/.github"]
 
 [dependencies]
-chrono = "0.4.23"
+chrono = "0.4.24"
 log = "0.4.17"
 rand = "0.8.5"
-reqwest = "0.11.14"
-serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.92"
+reqwest = "0.11.15"
+serde = { version = "1.0.158", features = ["derive"] }
+serde_json = "1.0.94"
 substring = "1.4.5"
-tokio = { version = "1.25.0", features = ["full"] }
-futures = "0.3.26"
+tokio = { version = "1.26.0", features = ["full"] }
+futures = "0.3.27"
 lazy_static = "1.4.0"
 arc-swap = "1.6.0"
 
 [dev-dependencies]
-simplelog = "0.12.0"
+simplelog = "0.12.1"
 
 [features]
 default = ["prod"]                             
